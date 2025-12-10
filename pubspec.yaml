@@ -9,16 +9,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  firebase_core: ^4.2.1          # ← SỬA THÀNH BẢN NÀY (mới nhất Dec 2025)
+  firebase_core: ^4.2.1
   firebase_auth: ^6.1.2
   cloud_firestore: ^6.1.0
   firebase_messaging: ^16.0.4
-  flutter_riverpod: ^3.0.3
-  go_router: ^17.0.0
-  google_maps_flutter: ^2.6.1
-  geolocator: ^14.0.1
-  background_location: ^0.13.2
-  package_info_plus: ^8.3.1
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+  google_maps_flutter: ^2.14.0 # downgrade 2.24 tu 2.19.
+  geolocator: ^14.0.2
+  background_locator_2: ^2.0.0   # ← THAY BẰNG CÁI NÀY, FIX LỖI ANDROID 100%
   confetti: ^0.8.0
   lottie: ^3.1.2
   url_launcher: ^6.3.0
