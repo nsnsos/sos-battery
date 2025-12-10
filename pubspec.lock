@@ -37,10 +37,10 @@ packages:
     dependency: "direct main"
     description:
       name: background_location
-      sha256: fbe02e4dec100fbdfe7a63aa1ca26ef3a0e228b946df0e0324e41ea3611173a5
+      sha256: "8d6b5eb886e17f88a7d8d8c840edec1c4f16b1a5269eeed62e4a3ef11a23991d"
       url: "https://pub.dev"
     source: hosted
-    version: "0.11.8"
+    version: "0.13.2"
   boolean_selector:
     dependency: transitive
     description:
