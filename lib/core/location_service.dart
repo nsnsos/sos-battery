@@ -1,5 +1,5 @@
-import 'dart:async';   // ← THÊM DÒNG NÀY CHO Timer
-import 'dart:ui';
+import 'dart:async';   // Cho Timer
+import 'dart:ui';      // Cho DartPluginRegistrant
 
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
@@ -25,7 +25,7 @@ class LocationService {
 
   @pragma('vm:entry-point')
   static void onStart(ServiceInstance service) async {
-    DartPluginRegistrant.ensureInitialized();   // ← ĐÃ CÓ IMPORT
+    DartPluginRegistrant.ensureInitialized();   // Đã có import dart:ui
 
     if (service is AndroidServiceInstance) {
       service.setForegroundNotificationInfo(
@@ -45,7 +45,7 @@ class LocationService {
     });
 
     Timer.periodic(const Duration(seconds: 60), (timer) {
-      print(❤️ Heartbeat - Service still alive');
+      print('❤️ Heartbeat - Service still alive');
       service.invoke('heartbeat');
     });
 

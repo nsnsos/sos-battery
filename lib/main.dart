@@ -7,8 +7,8 @@ import 'features/sos/presentation/pages/home_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await LocationService.init();   // Khởi động background service
-  LocationService.start();        // Bắt đầu service
+  await LocationService.init();   // Khởi động service
+  LocationService.start();        // Bắt đầu tracking
   runApp(const ProviderScope(child: SOSBatteryApp()));
 }
 
