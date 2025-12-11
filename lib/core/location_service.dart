@@ -1,19 +1,23 @@
+import 'dart:async';   // ← THÊM DÒNG NÀY CHO Timer
+import 'dart:ui';
+
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:geolocator/geolocator.dart';
 
-/// Service quản lý background location cho Hero online / ETA realtime
 class LocationService {
   static final FlutterBackgroundService _service = FlutterBackgroundService();
 
-  /// Khởi động background service với location tracking
   static Future<void> init() async {
-    final service = _service;
-    await service.configure(
+    await _service.configure(
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
         autoStart: true,
         isForegroundMode: true,
         autoStartOnBoot: true,
+        notificationChannelId: 'sos_battery_channel',
+        initialNotificationTitle: 'SOS-BATTERY Hero Online',
+        initialNotificationContent: 'Tracking location in background',
       ),
       iosConfiguration: IosConfiguration(),
     );
@@ -21,29 +25,28 @@ class LocationService {
 
   @pragma('vm:entry-point')
   static void onStart(ServiceInstance service) async {
-    DartPluginRegistrant.ensureInitialized();
+    DartPluginRegistrant.ensureInitialized();   // ← ĐÃ CÓ IMPORT
 
-    // Listen location updates – gửi lên Firebase realtime
+    if (service is AndroidServiceInstance) {
+      service.setForegroundNotificationInfo(
+        title: "SOS-BATTERY Hero Online",
+        content: "Tracking location...",
+      );
+    }
+
     Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10,  // meter
+        distanceFilter: 10,
       ),
     ).listen((Position position) {
       print('📍 Background Location: ${position.latitude}, ${position.longitude}');
-      print('Speed: ${position.speed}, Battery: ...');  // TODO: Thêm battery
-
-      // TODO: Gửi location lên Firestore cho Hero online / ETA realtime
-      // Ví dụ: FirebaseFirestore.instance.collection('hero_locations').doc(userId).set({
-      //   'lat': position.latitude,
-      //   'lng': position.longitude,
-      //   'timestamp': FieldValue.serverTimestamp(),
-      // });
+      // TODO: Gửi lên Firestore cho Hero online
     });
 
-    // Gửi heartbeat mỗi 60 giây để giữ service alive
     Timer.periodic(const Duration(seconds: 60), (timer) {
-      service.invoke('heartbeat', {'time': DateTime.now().toIso8601String()});
+      print(❤️ Heartbeat - Service still alive');
+      service.invoke('heartbeat');
     });
 
     service.on('stopService').listen((event) {
@@ -51,22 +54,13 @@ class LocationService {
     });
   }
 
-  /// Bắt đầu service
   static void start() {
     _service.startService();
     print('✅ Background Location Service started');
   }
 
-  /// Dừng service
   static void stop() {
     _service.invoke('stopService');
     print('❌ Background Location Service stopped');
-  }
-
-  /// Lấy location hiện tại 1 lần
-  static Future<Position> getCurrentLocation() async {
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
   }
 }
