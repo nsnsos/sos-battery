@@ -9,26 +9,43 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  # Firebase (phiên bản mới nhất tương thích Flutter 3.38.1)
   firebase_core: ^4.2.1
   firebase_auth: ^6.1.2
   cloud_firestore: ^6.1.0
   firebase_messaging: ^16.0.4
-  flutter_riverpod: ^2.5.1
-  go_router: ^14.2.0
+
+  # State management (Riverpod 3.x mới nhất, đồng bộ)
+  flutter_riverpod: ^3.0.3
+
+  # Routing
+  go_router: ^17.0.1
+
+  # Maps & Location
   google_maps_flutter: ^2.14.0
-  geolocator: ^14.0.2
-  flutter_background_service: ^5.0.6   # ← PLUGIN MỚI, FIX HẾT LỖI NAMESPACE + JVM
+  geolocator: ^14.0.1
+
+  # Background service (plugin pro, fix hết lỗi namespace/JVM)
+  flutter_background_service: ^5.0.6
+
+  # UI & Animation
   confetti: ^0.8.0
   lottie: ^3.1.2
+
+  # Utils
   url_launcher: ^6.3.0
   shared_preferences: ^2.3.2
+  package_info_plus: ^9.0.0   # ← ĐÃ LÊN BẢN MỚI NHẤT, KHÔNG CONFLICT
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
+  lints: ^6.0.0
 
-#flutter:
-  #uses-material-design: true
- # assets:
-   # - assets/animations/
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/animations/
+    - assets/icons/
