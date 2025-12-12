@@ -1,23 +1,20 @@
 workflows:
-  ios:
+  ios-build:                              # ← TÊN DUY NHẤT ĐỂ CODEMAGIC HIỆN NÚT RIÊNG
     name: SOS-BATTERY iOS Build
     max_build_duration: 120
     instance_type: mac_mini_m2
     environment:
-      flutter: 3.38.1        # ← CỐ ĐỊNH BẢN SIÊU ỔN ĐỊNH 2025
+      flutter: 3.38.1
       xcode: latest
       cocoapods: default
     triggering:
       events:
         - push
         - tag
-      branch_patterns:
-        - pattern: '**'
-          include: true
     scripts:
-      - name: Clean & Get Dependencies
+      - name: Clean & Setup
         script: |
-          echo "=== CLEAN SIÊU SẠCH TRƯỚC KHI BUILD ==="
+          echo "=== CLEAN SIÊU SẠCH iOS ==="
           flutter clean
           rm -rf pubspec.lock ios/Pods ios/Podfile.lock
           flutter pub get
@@ -25,28 +22,25 @@ workflows:
           pod cache clean --all
           pod install --repo-update
           cd ..
-          echo "=== CLEAN XONG – BUILD IPA ==="
       - name: Build IPA
         script: |
           flutter build ios --release --no-codesign
     artifacts:
-      - build/ios/ipa/*.ipa
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/**-iphoneos/*.app.dSYM
+      - build/ios/ipa/*.ipa                                 # ← IPA CHÍNH THỨC
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/Release-iphoneos/*.app.dSYM
+      - flutter_drive.log
 
-  android:
+  android-build:                            # ← TÊN DUY NHẤT CHO ANDROID
     name: SOS-BATTERY Android Build
     instance_type: mac_mini_m2
     environment:
-      flutter: 3.38.1        # ← CÙNG BẢN VỚI iOS
+      flutter: 3.38.1
     triggering:
       events:
         - push
         - tag
-      branch_patterns:
-        - pattern: '**'
-          include: true
     scripts:
-      - name: Clean & Get Dependencies
+      - name: Clean & Setup
         script: |
           flutter clean
           flutter pub get
@@ -54,4 +48,6 @@ workflows:
         script: |
           flutter build appbundle --release
     artifacts:
-      - build/app/outputs/bundle/release/app-release.aab
+      - build/app/outputs/bundle/release/app-release.aab   # ← AAB CHÍNH THỨC
+      - build/app/outputs/flutter-apk/app-release.apk      # ← BONUS: có luôn APK
+      - flutter_drive.log
