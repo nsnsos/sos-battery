@@ -1,5 +1,5 @@
 workflows:
-  ios-build:                                    # tên duy nhất để Codemagic hiện nút riêng
+  ios-build:
     name: SOS-BATTERY iOS Build
     max_build_duration: 120
     instance_type: mac_mini_m2
@@ -16,12 +16,12 @@ workflows:
           flutter clean
           flutter pub get
           cd ios && pod install --repo-update && cd ..
-      - name: Build IPA (chắc chắn có file .ipa)
+      - name: Build IPA
         script: |
-          flutter build ipa --release --no-codesign   # lệnh chính thức tạo .ipa
+          flutter build ipa --release --no-codesign
     artifacts:
-      - build/ios/ipa/*.ipa                        # ← IPA CHÍNH THỨC, 100% CÓ SAU KHI XANH
-      - build/ios/ipa/*.app.dSYM                   # crash report
+      - build/ios/ipa/*.ipa
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/Release-iphoneos/*.app.dSYM
       - flutter_drive.log
 
   android-build:
@@ -40,4 +40,5 @@ workflows:
           flutter build appbundle --release
     artifacts:
       - build/app/outputs/bundle/release/app-release.aab
+      - build/app/outputs/flutter-apk/app-release.apk
       - flutter_drive.log
