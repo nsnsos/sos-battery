@@ -1,5 +1,5 @@
 workflows:
-  ios-build:                              # ← TÊN DUY NHẤT ĐỂ CODEMAGIC HIỆN NÚT RIÊNG
+  ios-build:                                    # tên duy nhất để Codemagic hiện nút riêng
     name: SOS-BATTERY iOS Build
     max_build_duration: 120
     instance_type: mac_mini_m2
@@ -10,27 +10,21 @@ workflows:
     triggering:
       events:
         - push
-        - tag
     scripts:
       - name: Clean & Setup
         script: |
-          echo "=== CLEAN SIÊU SẠCH iOS ==="
           flutter clean
-          rm -rf pubspec.lock ios/Pods ios/Podfile.lock
           flutter pub get
-          cd ios
-          pod cache clean --all
-          pod install --repo-update
-          cd ..
-      - name: Build IPA
+          cd ios && pod install --repo-update && cd ..
+      - name: Build IPA (chắc chắn có file .ipa)
         script: |
-          flutter build ios --release --no-codesign
+          flutter build ipa --release --no-codesign   # lệnh chính thức tạo .ipa
     artifacts:
-      - build/ios/ipa/*.ipa                                 # ← IPA CHÍNH THỨC
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/Release-iphoneos/*.app.dSYM
+      - build/ios/ipa/*.ipa                        # ← IPA CHÍNH THỨC, 100% CÓ SAU KHI XANH
+      - build/ios/ipa/*.app.dSYM                   # crash report
       - flutter_drive.log
 
-  android-build:                            # ← TÊN DUY NHẤT CHO ANDROID
+  android-build:
     name: SOS-BATTERY Android Build
     instance_type: mac_mini_m2
     environment:
@@ -38,16 +32,12 @@ workflows:
     triggering:
       events:
         - push
-        - tag
     scripts:
-      - name: Clean & Setup
+      - name: Clean & Build AAB
         script: |
           flutter clean
           flutter pub get
-      - name: Build AAB
-        script: |
           flutter build appbundle --release
     artifacts:
-      - build/app/outputs/bundle/release/app-release.aab   # ← AAB CHÍNH THỨC
-      - build/app/outputs/flutter-apk/app-release.apk      # ← BONUS: có luôn APK
+      - build/app/outputs/bundle/release/app-release.aab
       - flutter_drive.log
