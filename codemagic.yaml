@@ -12,7 +12,7 @@ workflows:
 
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.sos-battery.app   # ✅ bundleId của bro
+        bundle_identifier: com.sosbattery.app   # ✅ bundleId của bro
 
 
     triggering:
