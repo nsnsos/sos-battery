@@ -20,9 +20,9 @@ workflows:
       - name: Build IPA
         script: |
           echo "=== BUILDING IPA ==="
-          flutter build ipa --release --no-codesign
+          flutter build ipa --release
     artifacts:
-      - build/ios/archive/*.xcarchive                                 # ← FILE IPA CHÍNH THỨC (100% CÓ)
+      - build/ios/ipa/*.ipa                                 # ← FILE IPA CHÍNH THỨC (100% CÓ)
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/Release-iphoneos/*.app.dSYM
 
   android-build:
