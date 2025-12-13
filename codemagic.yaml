@@ -10,21 +10,22 @@ workflows:
     triggering:
       events:
         - push
-    scripts:
-      - name: Clean & Setup
+  scripts:
+      - name: Clean & Get Dependencies
         script: |
-          echo "=== CLEAN & SETUP iOS ==="
+          echo "=== CLEAN SIÊU SẠCH TRƯỚC KHI BUILD ==="
           flutter clean
+          rm -rf pubspec.lock ios/Pods ios/Podfile.lock
           flutter pub get
           cd ios && pod install --repo-update && cd ..
-      - name: Build IPA
+      - name: Flutter build iOS (no sign)
         script: |
-          echo "=== BUILDING IPA ==="
-          flutter build ipa --release
+          flutter build ios --release --no-codesign
+      - name: Export IPA using Codemagic tools
+        script: |
+          xcode-project build-ipa --workspace ios/Runner.xcworkspace --scheme Runner
     artifacts:
-      - build/ios/ipa/*.ipa                                 # ← FILE IPA CHÍNH THỨC (100% CÓ)
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/Release-iphoneos/*.app.dSYM
-      - flutter_drive.log
+      - build/ios/ipa/*.ipa
 
   android-build:
     name: SOS-BATTERY Android Build
