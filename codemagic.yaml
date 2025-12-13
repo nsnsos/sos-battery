@@ -24,7 +24,7 @@ workflows:
       - name: Export IPA using Codemagic tools
         script: |
           xcode-project build-ipa --workspace ios/Runner.xcworkspace --scheme Runner
-    artifacts:
+      artifacts:
       - build/ios/ipa/*.ipa
 
   android-build:
