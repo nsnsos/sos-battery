@@ -26,6 +26,7 @@ workflows:
           xcode-project build-ipa --workspace ios/Runner.xcworkspace --scheme Runner
     artifacts:
       - build/ios/ipa/*.ipa
+      
   android-build:
     name: SOS-BATTERY Android Build
     instance_type: mac_mini_m2
