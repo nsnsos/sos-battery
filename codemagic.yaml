@@ -43,6 +43,6 @@ workflows:
           flutter pub get
           flutter build appbundle --release
     artifacts:
-      - build/app/outputs/bundle/release/app-release.aab    # ← FILE AAB CHÍNH THỨC
-      - build/app/outputs/flutter-apk/app-release.apk       # ← BONUS: có luôn APK
-      - flutter_drive.log
+      - build/app/outputs/bundle/release/*.aab  # File AAB chính thức (dùng wildcard cho an toàn)
+      - build/app/outputs/flutter-apk/app-release.apk  # Bonus APK
+      - flutter_drive.log  # Nếu có chạy test, log này sẽ được collect (tùy chọn nhưng phổ biến)
