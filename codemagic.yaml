@@ -1,46 +1,72 @@
 workflows:
-  ios-build:
-    name: SOS-BATTERY iOS Build
+
+  ios-release:
+    name: SOS-BATTERY iOS Release (IPA + TestFlight)
     max_build_duration: 120
     instance_type: mac_mini_m2
+
     environment:
       flutter: 3.38.1
       xcode: latest
       cocoapods: default
+
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.sos-battery.app   # ✅ bundleId của bro
+
+
     triggering:
       events:
         - push
+
     scripts:
-      - name: Clean & Setup
+      - name: Clean & Pub Get
         script: |
-          echo "=== CLEAN & SETUP iOS ==="
           flutter clean
           flutter pub get
-          cd ios && pod install --repo-update && cd ..
-      - name: Build IPA
+
+      - name: Install Pods
         script: |
-          echo "=== BUILDING IPA ==="
+          cd ios
+          pod install --repo-update
+          cd ..
+
+      - name: Build IPA (SIGNED)
+        script: |
           flutter build ipa --release
+
     artifacts:
-      - build/ios/ipa/*.ipa                                 # ← FILE IPA CHÍNH THỨC (100% CÓ)
+      - build/ios/ipa/*.ipa
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/Release-iphoneos/*.app.dSYM
 
-  android-build:
-    name: SOS-BATTERY Android Build
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+        submit_to_app_store: false   # 👉 khi ready thì đổi true
+
+  android-release:
+    name: SOS-BATTERY Android Release (AAB + APK)
+    max_build_duration: 60
     instance_type: mac_mini_m2
+
     environment:
       flutter: 3.38.1
+
     triggering:
       events:
         - push
+
     scripts:
-      - name: Clean & Build AAB
+      - name: Clean & Build Android
         script: |
-          echo "=== CLEAN & BUILD AAB ==="
           flutter clean
           flutter pub get
           flutter build appbundle --release
+          flutter build apk --release
+
     artifacts:
-      - build/app/outputs/bundle/release/app-release.aab    # ← FILE AAB CHÍNH THỨC
-      - build/app/outputs/flutter-apk/app-release.apk       # ← BONUS: có luôn APK
-      - flutter_drive.log
+      - build/app/outputs/bundle/release/app-release.aab
+      - build/app/outputs/flutter-apk/app-release.apk
