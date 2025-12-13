@@ -22,9 +22,8 @@ workflows:
           echo "=== BUILDING IPA ==="
           flutter build ipa --release --no-codesign
     artifacts:
-      - build/ios/ipa/*.ipa                                 # ← FILE IPA CHÍNH THỨC (100% CÓ)
+      - build/ios/archive/*.xcarchive                                 # ← FILE IPA CHÍNH THỨC (100% CÓ)
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/Products/Release-iphoneos/*.app.dSYM
-      - flutter_drive.log
 
   android-build:
     name: SOS-BATTERY Android Build
