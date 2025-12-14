@@ -1,14 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "www.apple.com">
 <plist version="1.0">
 <dict>
-	<key>method</key>
-	<string>development</string>
-	<key>teamID</key>
-	<string>4X8976J4T7</string>
-	<key>uploadSymbols</key>
-	<true/>
-	<key>compileBitcode</key>
-	<false/>
+    <key>method</key>
+    <string>development</string>
+    <key>teamID</key>
+    <string>4X8976J4T7</string>
+    <key>uploadSymbols</key>
+    <true/>
+    <key>compileBitcode</key>
+    <false/>
+    
+    <!-- CÁC KHÓA BỔ SUNG CHO MANUAL SIGNING -->
+    <key>signingStyle</key>
+    <string>manual</string>
+    
+    <!-- Thường là "iPhone Developer" cho chứng chỉ phát triển -->
+    <key>signingCertificate</key>
+    <string>iPhone Developer</string> 
+    
+    <!-- Ánh xạ Bundle ID tới Tên (Name) hoặc UUID của Provisioning Profile tương ứng -->
+    <key>provisioningProfiles</key> <!-- KEY CHÍNH XÁC PHẢI LÀ provisioningProfiles -->
+    <dict>
+        <!-- THAY THẾ "Tên hồ sơ cung cấp phát triển của bạn" bằng TÊN PROFILE THẬT -->
+        <key>com.sosbattery.app</key> 
+        <string>SOSBATTERY_App_Store_2025</string> 
+    </dict>
+    
 </dict>
 </plist>
