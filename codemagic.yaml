@@ -1,1 +1,49 @@
 
+workflows:
+  ios-build:
+    name: SOS-BATTERY iOS Build
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      flutter: 3.38.1
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+    scripts:
+      - name: Clean & Get Dependencies
+        script: |
+          echo "=== CLEAN SIÊU SẠCH TRƯỚC KHI BUILD ==="
+          flutter clean
+          rm -rf pubspec.lock ios/Pods ios/Podfile.lock
+          flutter pub get
+          cd ios && pod install --repo-update && cd ..
+      
+      - name: Flutter build IPA (recommended way)
+        script: |
+          echo "=== BUILD IPA BẰNG FLUTTER (ỔN ĐỊNH NHẤT 2025) ==="
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+      
+    artifacts:
+      - build/ios/ipa/*.ipa
+  
+  android-build:
+    name: SOS-BATTERY Android Build
+    instance_type: mac_mini_m2
+    environment:
+      flutter: 3.38.1
+    triggering:
+      events:
+        - push
+    scripts:
+      - name: Clean & Build AAB
+        script: |
+          echo "=== CLEAN & BUILD AAB ==="
+          flutter clean
+          flutter pub get
+          flutter build appbundle --release
+    artifacts:
+      - build/app/outputs/bundle/release/*.aab
+      - build/app/outputs/flutter-apk/app-release.apk
