@@ -1,4 +1,3 @@
-
 workflows:
   ios-build:
     name: SOS-BATTERY iOS Build
@@ -20,11 +19,10 @@ workflows:
           flutter pub get
           cd ios && pod install --repo-update && cd ..
       
-      - name: Flutter build IPA (recommended way)
+      - name: Build IPA with Flutter (Fix export options)
         script: |
-          echo "=== BUILD IPA BẰNG FLUTTER (ỔN ĐỊNH NHẤT 2025) ==="
-          flutter build ipa --release \
-            --export-options-plist=/Users/builder/export_options.plist
+          echo "=== BUILD IPA CHUẨN 2025 ==="
+          flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
       
     artifacts:
       - build/ios/ipa/*.ipa
