@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
-// Import các gói logic backend
+// Import các gói logic backend và các màn hình khác
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer' as dev;
 import 'map_screen.dart'; 
-import 'hero_screen.dart'; // <-- ĐÃ THÊM: Import HeroScreen
+import 'hero_screen.dart'; 
+import 'chat_screen.dart'; // <-- ĐÃ THÊM: Import màn hình Chat
+import 'safety_report_screen.dart'; // <-- ĐÃ THÊM: Import màn hình Report
+import 'tip_screen.dart'; // <-- ĐÃ THÊM: Import màn hình Tip
+import 'donate_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  // ... (giữ nguyên các phần initState, dispose, _showSosConfirmation, _handleSosRequest, _getCurrentLocation, _sendSOS)
+class _HomePageState extends State<HomePage> {
   late ConfettiController _confettiController;
 
   @override
@@ -29,10 +32,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _confettiController.dispose();
     super.dispose();
   }
-  
-  // Hàm hiển thị Popup chọn lý do SOS (giữ nguyên)
+
+  // Hàm hiển thị Popup chọn lý do SOS
   void _showReasonPopup() {
-    // ... (logic popup giữ nguyên)
     showDialog(
       context: context,
       builder: (context) {
@@ -54,20 +56,23 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Hàm xử lý logic khi gửi SOS (lấy vị trí, gửi lên Firestore)
   void _sendSOS(String reason) async {
-    Navigator.pop(context); 
+    Navigator.pop(context); // đóng popup
 
     try {
       Position position = await _getCurrentLocation();
       dev.log('Đã lấy vị trí: ${position.latitude}, ${position.longitude} với lý do: $reason');
 
-      await FirebaseFirestore.instance.collection('sos_requests').add({
+      // Gửi dữ liệu lên Cloud Firestore và lấy ID của job vừa tạo
+      DocumentReference docRef = await FirebaseFirestore.instance.collection('jobs').add({ // Sử dụng 'jobs' collection
         'latitude': position.latitude,
         'longitude': position.longitude,
         'reason': reason, 
         'timestamp': FieldValue.serverTimestamp(),
         'status': 'pending',
       });
+      String jobId = docRef.id; // Lấy Job ID
 
       _confettiController.play(); 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,13 +81,14 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: Colors.green),
       );
 
+      // Chuyển sang MapScreen và truyền đầy đủ tham số (isHero: false vì đây là người dùng thường)
       Navigator.push(
         context,
-	// Thay vì chỉ gọi MapScreen(reason: reason)
-        // Bạn cần truyền thêm chatId (jobId) và cờ isHero: false
-        MaterialPageRoute(builder: (context) => MapScreen(reason: reason, jobId: chatId, isHero: false)),
-	// Hoặc nếu bạn chuyển thẳng đến ChatScreen:
-        // MaterialPageRoute(builder: (context) => ChatScreen(jobId: chatId, isHero: false)),
+        MaterialPageRoute(builder: (context) => MapScreen(
+          reason: reason, 
+          jobId: jobId, 
+          isHero: false
+        )),
       );
 
     } catch (e) {
@@ -95,9 +101,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Hàm lấy vị trí (sử dụng geolocator)
   Future<Position> _getCurrentLocation() async {
-     // ... (logic lấy vị trí giữ nguyên)
-     bool serviceEnabled;
+    bool serviceEnabled;
     LocationPermission permission;
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -116,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
   }
 
-  // --- THÊM HÀM CHUYỂN MÀN HÌNH ---
+  // Hàm chuyển sang màn hình Hero Mode
   void _navigateToHeroMode() {
     Navigator.push(
       context,
@@ -128,11 +134,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar( // <-- ĐÃ THÊM APPBAR VÀ NÚT CHUYỂN MÀN HÌNH
+      appBar: AppBar(
         title: const Text("SOS Battery App"),
         actions: [
           IconButton(
-            icon: const Icon(Icons.two_wheeler, color: Colors.blue), // Icon xe máy/xe cộ
+            icon: const Icon(Icons.two_wheeler, color: Colors.blue),
             onPressed: _navigateToHeroMode,
             tooltip: 'Chuyển sang chế độ Hero (Cứu hộ)',
           ),
@@ -141,17 +147,42 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: [
           Center(
-            child: ElevatedButton(
-              onPressed: _showReasonPopup, 
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(80),
-              ),
-              child: const Text(
-                'SOS',
-                style: TextStyle(fontSize: 60, color: Colors.white),
-              ),
+            child: Column( // <-- Dùng Column để xếp chồng nút SOS và các nút test
+              mainAxisAlignment: MainAxisAlignment.center, 
+              children: [
+                ElevatedButton(
+                  onPressed: _showReasonPopup, 
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: const CircleBorder(),
+                    padding: const EdgeInsets.all(80),
+                  ),
+                  child: const Text(
+                    'SOS',
+                    style: TextStyle(fontSize: 60, color: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 40), 
+
+                // --- CÁC NÚT THỬ NGHIỆM TẠM THỜI (Xóa khi hoàn tất phát triển) ---
+                ElevatedButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatScreen(jobId: 'job_test_123', isHero: false))), 
+                  child: const Text('Test Chat (User)'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SafetyReportScreen(jobId: 'job_test_123', isHero: false))),
+                  child: const Text('Test Safety & Report'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const TipScreen(heroVenmoHandle: '@mockhero', heroCashAppHandle: '\$mockhero'))),
+                  child: const Text('Test Tip Hero'),
+                ),
+		ElevatedButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const DonateScreen())),
+                  child: const Text('Test Donate Screen'),
+                ),
+                // --- KẾT THÚC CÁC NÚT THỬ NGHIỆM ---
+              ],
             ),
           ),
           Align(
@@ -170,4 +201,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
