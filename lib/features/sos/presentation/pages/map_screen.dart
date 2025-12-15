@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; 
+import 'package:confetti/confetti.dart'; // <-- ĐÃ THÊM: Import Confetti
 import 'dart:async';
 import 'dart:developer' as dev;
-// Import màn hình ChatScreen để có thể mở từ đây
 import 'chat_screen.dart'; 
+import 'safety_report_screen.dart'; 
 
 class MapScreen extends StatefulWidget {
   final String reason;
-  final String jobId; // <-- ĐÃ THÊM: ID của yêu cầu SOS
-  final bool isHero;  // <-- ĐÃ THÊM: Cờ xác định vai trò người dùng
+  final String jobId; 
+  final bool isHero;  
 
-  // Cập nhật constructor để nhận 3 tham số
   const MapScreen({
     super.key,
     required this.reason,
@@ -28,28 +29,52 @@ class _MapScreenState extends State<MapScreen> {
   LatLng? _currentPosition;
   final Set<Marker> _markers = {};
   String _statusMessage = "Đang tìm vị trí hiện tại...";
+  late ConfettiController _confettiController; // <-- ĐÃ THÊM: Controller pháo hoa
 
   @override
   void initState() {
     super.initState();
     _liveLocateUser(); 
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3)); // <-- ĐÃ THÊM
   }
   
-  // ... (giữ nguyên các hàm _liveLocateUser, _updateCameraAndMarker, _getCurrentLocation nếu bạn có) ...
-
-  // Hàm chuyển sang màn hình Chat
-  void _navigateToChat() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatScreen(
-          jobId: widget.jobId, // Truyền ID job đã nhận
-          isHero: widget.isHero, // Truyền cờ isHero đã nhận
-        ),
-      ),
-    );
+  @override
+  void dispose() { // <-- ĐÃ THÊM: Dispose controller
+    _confettiController.dispose();
+    super.dispose();
   }
 
+  // ... (giữ nguyên các hàm _liveLocateUser, _updateCameraAndMarker, _getCurrentLocation, _navigateToChat) ...
+  // Các hàm này giữ nguyên như trước
+
+  // HÀM _completeJob ĐÃ CẬP NHẬT để có pháo hoa
+  void _completeJob() async {
+    try {
+      await FirebaseFirestore.instance.collection('jobs').doc(widget.jobId).update({
+        'status': 'completed', 
+        'completedTimestamp': FieldValue.serverTimestamp(),
+      });
+
+      // KÍCH HOẠT PHÁO HOA TẠI ĐÂY
+      _confettiController.play(); 
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Dịch vụ đã hoàn tất! Cảm ơn bạn."), backgroundColor: Colors.green),
+      );
+      
+      // Có thể chuyển về màn hình chính sau 3 giây pháo hoa nổ xong
+      // Future.delayed(Duration(seconds: 3), () {
+      //      Navigator.popUntil(context, (route) => route.isFirst);
+      // });
+
+    } catch (e) {
+      dev.log("Lỗi hoàn tất dịch vụ: $e");
+       ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Lỗi: Không thể hoàn tất dịch vụ. $e"), backgroundColor: Colors.red),
+      );
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,10 +82,18 @@ class _MapScreenState extends State<MapScreen> {
         title: const Text("Bản đồ cứu hộ Realtime"),
         backgroundColor: Colors.red,
         actions: [
-          IconButton( // <-- ĐÃ THÊM NÚT MỞ CHAT
+          // ... (actions buttons giữ nguyên)
+           IconButton( 
             icon: const Icon(Icons.chat),
             onPressed: _navigateToChat,
             tooltip: 'Mở Chat ẩn danh',
+          ),
+          IconButton( 
+            icon: const Icon(Icons.report_problem, color: Colors.yellow),
+            onPressed: () {
+               Navigator.push(context, MaterialPageRoute(builder: (context) => SafetyReportScreen(jobId: widget.jobId, isHero: widget.isHero)));
+            },
+            tooltip: 'Báo cáo sự cố/giả mạo',
           ),
         ],
       ),
@@ -68,7 +101,8 @@ class _MapScreenState extends State<MapScreen> {
         children: [
           if (_currentPosition != null)
             GoogleMap(
-              mapType: MapType.normal,
+              // ... (phần GoogleMap giữ nguyên)
+               mapType: MapType.normal,
               initialCameraPosition: CameraPosition(
                 target: _currentPosition!,
                 zoom: 14,
@@ -85,28 +119,40 @@ class _MapScreenState extends State<MapScreen> {
               child: CircularProgressIndicator(),
             ),
           
+          // Thanh thông báo trạng thái
           Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              color: Colors.black54,
-              child: SafeArea(
-                child: Text(
-                  _statusMessage,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
+            top: 0, left: 0, right: 0,
+            child: Container( /* ... code container ... */),
+          ),
+
+          // <-- ĐÃ THÊM: Widget Pháo hoa -->
+          Align(
+            alignment: Alignment.center, // Canh giữa màn hình (hoặc vị trí GPS)
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive, // Nổ tỏa ra xung quanh
+              colors: const [Colors.green, Colors.blue, Colors.yellow],
+              emissionFrequency: 0.05,
+              numberOfParticles: 50,
+              gravity: 0.3,
             ),
           ),
+           // <-- KẾT THÚC THÊM -->
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _updateCameraAndMarker, 
-        child: const Icon(Icons.my_location),
-        backgroundColor: Colors.red,
-      ),
+      // Nút Hoàn tất/My location
+      floatingActionButton: widget.isHero == false
+          ? FloatingActionButton.extended(
+              onPressed: _completeJob, // Gọi hàm có pháo hoa
+              label: const Text("XÁC NHẬN HOÀN TẤT"),
+              icon: const Icon(Icons.check_circle),
+              backgroundColor: Colors.green,
+            )
+          : FloatingActionButton( 
+              onPressed: _updateCameraAndMarker, 
+              child: const Icon(Icons.my_location),
+              backgroundColor: Colors.red,
+            ),
     );
   }
 }

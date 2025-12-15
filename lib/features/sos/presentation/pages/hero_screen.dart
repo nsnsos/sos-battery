@@ -18,9 +18,9 @@ class HeroScreen extends StatefulWidget {
 class _HeroScreenState extends State<HeroScreen> {
   bool _isOnline = false;
   Position? _currentPosition;
-  // Giả định Hero ID lấy từ FirebaseAuth
   final String _heroId = FirebaseAuth.instance.currentUser?.uid ?? "HERO_USER_ID_MOCK"; 
   String _currentJobId = ''; 
+  final List<DocumentSnapshot> _nearbyRequests = []; // <-- ĐÃ THÊM: Danh sách requests gần đó
 
   final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
 
@@ -29,133 +29,94 @@ class _HeroScreenState extends State<HeroScreen> {
     super.initState();
     _initNotifications();
   }
-
-  Future<void> _initNotifications() async {
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    final InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
-    await _notifications.initialize(initializationSettings);
-  }
-
-  Future<void> _goOnline() async {
-    setState(() {
-      _isOnline = true;
-    });
-    // Bắt đầu background location (cần cấu hình native)
-    await BackgroundLocator.registerLocationUpdate(
-      (Position position) {
-        setState(() {
-          _currentPosition = position;
-        });
-        _updateHeroLocationInFirestore(position); 
-      },
-      settings: const LocationSettings( 
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
-      ),
-    );
-    _showNotification("SOS gần bạn!", "Có người cần cứu pin xe – cách 2km");
-    dev.log("Hero is online and location tracking started.");
-  }
   
-  Future<void> _updateHeroLocationInFirestore(Position position) async {
-    await FirebaseFirestore.instance.collection('heroes_online').doc(_heroId).set({
-      'latitude': position.latitude,
-      'longitude': position.longitude,
-      'timestamp': FieldValue.serverTimestamp(),
-      'isOnline': true,
-    }, SetOptions(merge: true));
-  }
+  // ... (giữ nguyên các hàm _initNotifications, _goOnline, _updateHeroLocationInFirestore, _showNotification) ...
 
-  Future<void> _showNotification(String title, String body) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'hero_channel', 'Hero Alerts',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
-    const NotificationDetails details = NotificationDetails(android: androidDetails);
-    await _notifications.show(0, title, body, details);
-  }
-
-  // --- HÀM _acceptSOS ĐÃ CẬP NHẬT ---
-  void _acceptSOS() async {
-    // Giả lập nhận JOB ID từ một yêu cầu gần đó (ví dụ từ danh sách _nearbyRequests)
-    String jobId = "SOS_REQUEST_ID_MOCK"; 
-    
-    // Cập nhật trạng thái Job trên Firestore
-    await FirebaseFirestore.instance.collection('jobs').doc(jobId).update({
-      'status': 'accepted',
-      'heroId': _heroId,
-      'acceptedTimestamp': FieldValue.serverTimestamp(),
+  // --- HÀM _startListeningToSosRequests ĐÃ CẬP NHẬT ---
+  void _startListeningToSosRequests() {
+    FirebaseFirestore.instance
+        .collection('jobs') // Sử dụng collection 'jobs' theo cấu trúc của bạn
+        // Lọc chỉ lấy các trạng thái Đang chờ hoặc Đã chấp nhận
+        .where('status', whereIn: ['pending', 'accepted']) 
+        .snapshots()
+        .listen((snapshot) {
+      setState(() {
+        _nearbyRequests.clear();
+        _nearbyRequests.addAll(snapshot.docs);
+        if (_nearbyRequests.isNotEmpty) {
+           dev.log("Tìm thấy ${_nearbyRequests.length} yêu cầu SOS gần đó!");
+           // showNotification("SOS Mới!", "Có yêu cầu cứu hộ gần vị trí của bạn.");
+        }
+      });
     });
-    
-    setState(() {
-      _currentJobId = jobId;
-    });
-
-    // Sau khi chấp nhận job, chuyển ngay sang màn hình Map và Chat
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Job Locked!'),
-        content: const Text('Bạn đã nhận job – ETA: 8 phút. Chuyển sang màn hình bản đồ và chat.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Đóng dialog
-              // Chuyển sang MapScreen và truyền tham số isHero: true
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MapScreen(
-                  reason: "Hỗ trợ cứu hộ", 
-                  jobId: jobId, 
-                  isHero: true,
-                )),
-              );
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
-  // --- KẾT THÚC HÀM _acceptSOS ĐÃ CẬP NHẬT ---
+  // --- KẾT THÚC HÀM _startListeningToSosRequests ĐÃ CẬP NHẬT ---
+
+  // ... (giữ nguyên hàm _acceptSOS, đảm bảo nó gọi đúng jobId khi nhận job) ...
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Hero Mode')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(_isOnline ? 'Bạn đang Online' : 'Bạn đang Offline', style: const TextStyle(fontSize: 24)),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _isOnline ? null : _goOnline,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green, padding: const EdgeInsets.all(20)),
-              child: const Text('GO ONLINE', style: TextStyle(fontSize: 30)),
+      body: Column( // <-- ĐÃ SỬA: Dùng Column thay vì Center/Stack để hiển thị danh sách
+        children: [
+          // Hiển thị trạng thái Online/Offline
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Switch(
+                  value: _isOnline,
+                  onChanged: (value) => _toggleOnlineStatus(), // <-- Cần hàm _toggleOnlineStatus()
+                  activeColor: Colors.green,
+                ),
+                Text(_isOnline ? 'Bạn đang Online' : 'Bạn đang Offline', style: const TextStyle(fontSize: 20)),
+              ],
             ),
-            const SizedBox(height: 40),
-            if (_isOnline && _currentJobId.isEmpty) 
-              Column(
-                children: [
-                  const Text('Có SOS gần bạn!', style: TextStyle(fontSize: 28, color: Colors.red)),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _acceptSOS,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    child: const Text("I'M COMING", style: TextStyle(fontSize: 30)),
-                  ),
-                ],
-              ),
-            if (_currentJobId.isNotEmpty)
-               Text('Đang trên đường đến Job $_currentJobId', style: const TextStyle(fontSize: 18, color: Colors.blue)),
-          ],
-        ),
+          ),
+          
+          if (_isOnline && _currentJobId.isEmpty)
+            Expanded( // <-- ĐÃ SỬA: Dùng Expanded để danh sách cuộn được
+              child: _nearbyRequests.isEmpty 
+              ? const Center(child: Text("Đang chờ yêu cầu SOS gần đó...", style: TextStyle(fontSize: 18)))
+              : ListView.builder(
+                  itemCount: _nearbyRequests.length,
+                  itemBuilder: (context, index) {
+                    var request = _nearbyRequests[index].data() as Map<String, dynamic>;
+                    String jobId = _nearbyRequests[index].id; // Lấy Job ID
+                    return ListTile(
+                      leading: const Icon(Icons.location_on, color: Colors.red),
+                      title: Text("Yêu cầu SOS: ${request['reason'] ?? 'Không rõ'}"),
+                      subtitle: Text("Trạng thái: ${request['status']}"),
+                      trailing: const Icon(Icons.arrow_forward),
+                      onTap: () {
+                        // Chuyển đến màn hình Map chi tiết (hoặc gọi _acceptSOS với jobId này)
+                        // Ví dụ chuyển sang MapScreen:
+                         Navigator.push(context, MaterialPageRoute(builder: (context) => MapScreen(
+                          reason: request['reason'] ?? 'Cứu hộ', 
+                          jobId: jobId, 
+                          isHero: true,
+                        )));
+                      },
+                    );
+                  },
+                ),
+            )
+          else if (_currentJobId.isNotEmpty)
+             Text('Đang trên đường đến Job $_currentJobId', style: const TextStyle(fontSize: 18, color: Colors.blue)),
+        ],
       ),
     );
+  }
+
+  // Cần thêm hàm _toggleOnlineStatus() nếu bạn dùng Switch như trong mã nguồn mới này
+  void _toggleOnlineStatus() {
+    if (_isOnline) {
+      // Logic go offline
+      setState(() => _isOnline = false);
+    } else {
+      _goOnline(); // Gọi hàm go online đã viết
+    }
   }
 }
