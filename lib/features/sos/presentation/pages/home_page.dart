@@ -1,87 +1,149 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
+// Import các gói logic backend
+import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:developer' as dev;
+import 'map_screen.dart'; // Đảm bảo bạn có file này trong thư mục pages/
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomePageState extends State<HomePage> {
-  late ConfettiController _controller;
+class _HomeScreenState extends State<HomeScreen> {
+  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
-    _controller = ConfettiController(duration: const Duration(seconds: 3));
-  }
-
-  void _onSOSPressed() {
-    _controller.play();
-    // Sau này mở popup chọn lý do SOS
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
+  // Hàm hiển thị Popup chọn lý do SOS
+  void _showReasonPopup() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Chọn lý do SOS'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(title: const Text('Phone dying'), onTap: () => _sendSOS('Phone dying')),
+              ListTile(title: const Text('Car dead battery'), onTap: () => _sendSOS('Car dead battery')),
+              ListTile(title: const Text('Flat tire'), onTap: () => _sendSOS('Flat tire')),
+              ListTile(title: const Text('Out of gas'), onTap: () => _sendSOS('Out of gas')),
+              ListTile(title: const Text('Keys locked'), onTap: () => _sendSOS('Keys locked')),
+              ListTile(title: const Text('Other'), onTap: () => _sendSOS('Other')),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // HÀM MỚI: Xử lý logic backend và chuyển màn hình Map
+  void _sendSOS(String reason) async {
+    Navigator.pop(context); // đóng popup
+
+    try {
+      // 1. Lấy vị trí hiện tại (Logic đã thêm)
+      Position position = await _getCurrentLocation();
+      dev.log('Đã lấy vị trí: ${position.latitude}, ${position.longitude} với lý do: $reason');
+
+      // 2. Gửi dữ liệu lên Cloud Firestore (Logic đã thêm)
+      await FirebaseFirestore.instance.collection('sos_requests').add({
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'reason': reason, // Thêm lý do vào Firestore
+        'timestamp': FieldValue.serverTimestamp(),
+        'status': 'pending',
+      });
+
+      // 3. Chúc mừng và chuyển sang MapScreen
+      _confettiController.play(); // pháo hoa nổ
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("Yêu cầu SOS đã được gửi thành công!"),
+            backgroundColor: Colors.green),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => MapScreen(reason: reason)),
+      );
+
+    } catch (e) {
+      dev.log('Lỗi khi gửi SOS: $e');
+      // Hiển thị thông báo lỗi nếu có
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("Lỗi: Không thể gửi yêu cầu SOS. $e"),
+            backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  // Hàm lấy vị trí (sử dụng geolocator, đã thêm logic kiểm tra quyền)
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied, we cannot request permissions.');
+    }
+    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      // Đã đổi màu nền thành màu trắng mặc định để nổi bật Confetti và nút đỏ
+      backgroundColor: Colors.white, 
       body: Stack(
         children: [
-          // Nút SOS đỏ to
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 100),
-              child: GestureDetector(
-                onTap: _onSOSPressed,
-                child: Container(
-                  width: 320,
-                  height: 320,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(color: Colors.red, blurRadius: 60, spreadRadius: 20)
-                    ],
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'SOS',
-                      style: TextStyle(color: Colors.white, fontSize: 100, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
+          Center(
+            child: ElevatedButton(
+              onPressed: _showReasonPopup, // bấm nút → popup hiện
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: const CircleBorder(),
+                padding: const EdgeInsets.all(80),
+              ),
+              child: const Text(
+                'SOS',
+                style: TextStyle(fontSize: 60, color: Colors.white),
               ),
             ),
           ),
-
-          // Pháo hoa đỏ-trắng-xanh
           Align(
             alignment: Alignment.topCenter,
             child: ConfettiWidget(
-              confettiController: _controller,
+              confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
-              colors: const [Colors.red, Colors.white, Colors.blue],
               emissionFrequency: 0.05,
-              numberOfParticles: 100,
-            ),
-          ),
-
-          // Tên app
-          const Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: EdgeInsets.only(top: 80),
-              child: Text(
-                'SOS-BATTERY',
-                style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold),
-              ),
+              numberOfParticles: 50,
+              gravity: 0.2,
+              colors: const [Colors.red, Colors.white, Colors.blue],
             ),
           ),
         ],

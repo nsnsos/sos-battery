@@ -24,19 +24,22 @@ dependencies:
 
   # Maps & Location
   google_maps_flutter: ^2.14.0
-  geolocator: ^14.0.1
+  geolocator: ^10.1.0 # Updated to 10.1.0 to match your request
 
   # Background service (plugin pro, fix hết lỗi namespace/JVM)
   flutter_background_service: ^5.0.6
+  background_locator_2: ^2.0.4   # <-- ĐÃ THÊM: cho background location
 
   # UI & Animation
   confetti: ^0.8.0
   lottie: ^3.1.2
+  flutter_local_notifications: ^17.2.2  # <-- ĐÃ THÊM: thông báo khi có SOS gần
 
   # Utils
-  url_launcher: ^6.3.0
+  url_launcher: ^6.2.6  # <-- ĐÃ ĐỒNG BỘ: cho mở Stripe/Venmo/Cash App
   shared_preferences: ^2.3.2
-  package_info_plus: ^9.0.0   # ← ĐÃ LÊN BẢN MỚI NHẤT, KHÔNG CONFLICT
+  package_info_plus: ^9.0.0
+  http: ^1.2.2  # <-- ĐÃ THÊM: cho gọi API Stripe nếu cần
 
 dev_dependencies:
   flutter_test:
