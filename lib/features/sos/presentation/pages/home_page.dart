@@ -4,7 +4,8 @@ import 'package:confetti/confetti.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer' as dev;
-import 'map_screen.dart'; // Đảm bảo bạn có file này trong thư mục pages/
+import 'map_screen.dart'; 
+import 'hero_screen.dart'; // <-- ĐÃ THÊM: Import HeroScreen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // ... (giữ nguyên các phần initState, dispose, _showSosConfirmation, _handleSosRequest, _getCurrentLocation, _sendSOS)
   late ConfettiController _confettiController;
 
   @override
@@ -27,9 +29,10 @@ class _HomeScreenState extends State<HomeScreen> {
     _confettiController.dispose();
     super.dispose();
   }
-
-  // Hàm hiển thị Popup chọn lý do SOS
+  
+  // Hàm hiển thị Popup chọn lý do SOS (giữ nguyên)
   void _showReasonPopup() {
+    // ... (logic popup giữ nguyên)
     showDialog(
       context: context,
       builder: (context) {
@@ -51,26 +54,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // HÀM MỚI: Xử lý logic backend và chuyển màn hình Map
   void _sendSOS(String reason) async {
-    Navigator.pop(context); // đóng popup
+    Navigator.pop(context); 
 
     try {
-      // 1. Lấy vị trí hiện tại (Logic đã thêm)
       Position position = await _getCurrentLocation();
       dev.log('Đã lấy vị trí: ${position.latitude}, ${position.longitude} với lý do: $reason');
 
-      // 2. Gửi dữ liệu lên Cloud Firestore (Logic đã thêm)
       await FirebaseFirestore.instance.collection('sos_requests').add({
         'latitude': position.latitude,
         'longitude': position.longitude,
-        'reason': reason, // Thêm lý do vào Firestore
+        'reason': reason, 
         'timestamp': FieldValue.serverTimestamp(),
         'status': 'pending',
       });
 
-      // 3. Chúc mừng và chuyển sang MapScreen
-      _confettiController.play(); // pháo hoa nổ
+      _confettiController.play(); 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text("Yêu cầu SOS đã được gửi thành công!"),
@@ -84,7 +83,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     } catch (e) {
       dev.log('Lỗi khi gửi SOS: $e');
-      // Hiển thị thông báo lỗi nếu có
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text("Lỗi: Không thể gửi yêu cầu SOS. $e"),
@@ -93,9 +91,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Hàm lấy vị trí (sử dụng geolocator, đã thêm logic kiểm tra quyền)
   Future<Position> _getCurrentLocation() async {
-    bool serviceEnabled;
+     // ... (logic lấy vị trí giữ nguyên)
+     bool serviceEnabled;
     LocationPermission permission;
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -113,17 +111,34 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
   }
-  
+
+  // --- THÊM HÀM CHUYỂN MÀN HÌNH ---
+  void _navigateToHeroMode() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HeroScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Đã đổi màu nền thành màu trắng mặc định để nổi bật Confetti và nút đỏ
-      backgroundColor: Colors.white, 
+      backgroundColor: Colors.white,
+      appBar: AppBar( // <-- ĐÃ THÊM APPBAR VÀ NÚT CHUYỂN MÀN HÌNH
+        title: const Text("SOS Battery App"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.two_wheeler, color: Colors.blue), // Icon xe máy/xe cộ
+            onPressed: _navigateToHeroMode,
+            tooltip: 'Chuyển sang chế độ Hero (Cứu hộ)',
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           Center(
             child: ElevatedButton(
-              onPressed: _showReasonPopup, // bấm nút → popup hiện
+              onPressed: _showReasonPopup, 
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 shape: const CircleBorder(),
@@ -151,3 +166,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
