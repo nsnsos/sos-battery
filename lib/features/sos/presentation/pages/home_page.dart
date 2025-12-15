@@ -78,7 +78,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => MapScreen(reason: reason)),
+	// Thay vì chỉ gọi MapScreen(reason: reason)
+        // Bạn cần truyền thêm chatId (jobId) và cờ isHero: false
+        MaterialPageRoute(builder: (context) => MapScreen(reason: reason, jobId: chatId, isHero: false)),
+	// Hoặc nếu bạn chuyển thẳng đến ChatScreen:
+        // MaterialPageRoute(builder: (context) => ChatScreen(jobId: chatId, isHero: false)),
       );
 
     } catch (e) {

@@ -3,12 +3,21 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'dart:developer' as dev;
+// Import màn hình ChatScreen để có thể mở từ đây
+import 'chat_screen.dart'; 
 
 class MapScreen extends StatefulWidget {
   final String reason;
+  final String jobId; // <-- ĐÃ THÊM: ID của yêu cầu SOS
+  final bool isHero;  // <-- ĐÃ THÊM: Cờ xác định vai trò người dùng
 
-  // Constructor nhận lý do SOS từ HomeScreen
-  const MapScreen({super.key, required this.reason});
+  // Cập nhật constructor để nhận 3 tham số
+  const MapScreen({
+    super.key,
+    required this.reason,
+    required this.jobId,
+    required this.isHero,
+  });
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -23,60 +32,23 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    _liveLocateUser(); // Bắt đầu theo dõi vị trí người dùng
+    _liveLocateUser(); 
   }
+  
+  // ... (giữ nguyên các hàm _liveLocateUser, _updateCameraAndMarker, _getCurrentLocation nếu bạn có) ...
 
-  // Hàm theo dõi vị trí người dùng theo thời gian thực (realtime)
-  void _liveLocateUser() async {
-    LocationSettings locationSettings = const LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 10, // Cập nhật vị trí khi di chuyển 10 mét
-    );
-
-    Geolocator.getPositionStream(locationSettings: locationSettings).listen(
-      (Position position) {
-        setState(() {
-          _currentPosition = LatLng(position.latitude, position.longitude);
-          _statusMessage = "Đã tìm thấy vị trí. Lý do SOS: ${widget.reason}";
-          _updateCameraAndMarker();
-        });
-      },
-      onError: (error) {
-        dev.log("Lỗi theo dõi vị trí: $error");
-        setState(() {
-          _statusMessage = "Lỗi vị trí: $error";
-        });
-      },
-    );
-  }
-
-  // Cập nhật vị trí camera và thêm marker trên bản đồ
-  void _updateCameraAndMarker() async {
-    if (_currentPosition == null) return;
-
-    final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(
-        target: _currentPosition!,
-        zoom: 16, // Zoom gần hơn để thấy rõ vị trí
-      ),
-    ));
-
-    setState(() {
-      _markers.clear();
-      _markers.add(
-        Marker(
-          markerId: const MarkerId("currentLocation"),
-          position: _currentPosition!,
-          infoWindow: InfoWindow(
-            title: "Vị trí của bạn",
-            snippet: "Lý do: ${widget.reason}",
-          ),
+  // Hàm chuyển sang màn hình Chat
+  void _navigateToChat() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          jobId: widget.jobId, // Truyền ID job đã nhận
+          isHero: widget.isHero, // Truyền cờ isHero đã nhận
         ),
-      );
-    });
+      ),
+    );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +56,13 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: const Text("Bản đồ cứu hộ Realtime"),
         backgroundColor: Colors.red,
+        actions: [
+          IconButton( // <-- ĐÃ THÊM NÚT MỞ CHAT
+            icon: const Icon(Icons.chat),
+            onPressed: _navigateToChat,
+            tooltip: 'Mở Chat ẩn danh',
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -99,14 +78,13 @@ class _MapScreenState extends State<MapScreen> {
                 _updateCameraAndMarker();
               },
               markers: _markers,
-              myLocationEnabled: true, // Hiển thị chấm tròn vị trí của tôi
+              myLocationEnabled: true, 
             )
           else
             const Center(
               child: CircularProgressIndicator(),
             ),
           
-          // Thanh thông báo trạng thái ở trên cùng
           Positioned(
             top: 0,
             left: 0,
@@ -125,7 +103,7 @@ class _MapScreenState extends State<MapScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _updateCameraAndMarker, // Nút bấm để focus lại vào vị trí hiện tại
+        onPressed: _updateCameraAndMarker, 
         child: const Icon(Icons.my_location),
         backgroundColor: Colors.red,
       ),
