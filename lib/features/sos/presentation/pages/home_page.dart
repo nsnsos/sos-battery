@@ -10,6 +10,8 @@ import 'chat_screen.dart'; // <-- ĐÃ THÊM: Import màn hình Chat
 import 'safety_report_screen.dart'; // <-- ĐÃ THÊM: Import màn hình Report
 import 'tip_screen.dart'; // <-- ĐÃ THÊM: Import màn hình Tip
 import 'donate_screen.dart';
+import 'roadside_screen.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -49,9 +51,14 @@ class _HomePageState extends State<HomePage> {
               ListTile(title: const Text('Out of gas'), onTap: () => _sendSOS('Out of gas')),
               ListTile(title: const Text('Keys locked'), onTap: () => _sendSOS('Keys locked')),
               ListTile(title: const Text('Other'), onTap: () => _sendSOS('Other')),
+	      ListTile(title: const Text('Call Roadside service near you'),onTap: () 				{     Navigator.pop(context); // Đóng popup
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const RoadsideScreen()));
+                },
+              ),
+
             ],
           ),
-        );
+ 	);
       },
     );
   }
