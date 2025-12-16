@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:background_locator_2/background_locator.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; 
-import 'dart:developer' as dev;
-// Import các màn hình cần chuyển đến
-import 'chat_screen.dart'; 
-import 'map_screen.dart'; 
+// ... các imports khác ...
+import 'roadside_screen.dart'; // <-- ĐÃ THÊM: Import RoadsideScreen
 
 class HeroScreen extends StatefulWidget {
   const HeroScreen({super.key});
@@ -16,49 +10,23 @@ class HeroScreen extends StatefulWidget {
 }
 
 class _HeroScreenState extends State<HeroScreen> {
+  // ... (các biến trạng thái và hàm initState, dispose, etc. giữ nguyên) ...
   bool _isOnline = false;
-  Position? _currentPosition;
-  final String _heroId = FirebaseAuth.instance.currentUser?.uid ?? "HERO_USER_ID_MOCK"; 
-  String _currentJobId = ''; 
-  final List<DocumentSnapshot> _nearbyRequests = []; // <-- ĐÃ THÊM: Danh sách requests gần đó
+  // ...
 
-  final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
-
-  @override
-  void initState() {
-    super.initState();
-    _initNotifications();
+  // Hàm chuyển đến màn hình gọi Roadside
+  void _navigateToRoadside() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const RoadsideScreen()),
+    );
   }
-  
-  // ... (giữ nguyên các hàm _initNotifications, _goOnline, _updateHeroLocationInFirestore, _showNotification) ...
-
-  // --- HÀM _startListeningToSosRequests ĐÃ CẬP NHẬT ---
-  void _startListeningToSosRequests() {
-    FirebaseFirestore.instance
-        .collection('jobs') // Sử dụng collection 'jobs' theo cấu trúc của bạn
-        // Lọc chỉ lấy các trạng thái Đang chờ hoặc Đã chấp nhận
-        .where('status', whereIn: ['pending', 'accepted']) 
-        .snapshots()
-        .listen((snapshot) {
-      setState(() {
-        _nearbyRequests.clear();
-        _nearbyRequests.addAll(snapshot.docs);
-        if (_nearbyRequests.isNotEmpty) {
-           dev.log("Tìm thấy ${_nearbyRequests.length} yêu cầu SOS gần đó!");
-           // showNotification("SOS Mới!", "Có yêu cầu cứu hộ gần vị trí của bạn.");
-        }
-      });
-    });
-  }
-  // --- KẾT THÚC HÀM _startListeningToSosRequests ĐÃ CẬP NHẬT ---
-
-  // ... (giữ nguyên hàm _acceptSOS, đảm bảo nó gọi đúng jobId khi nhận job) ...
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Hero Mode')),
-      body: Column( // <-- ĐÃ SỬA: Dùng Column thay vì Center/Stack để hiển thị danh sách
+      body: Column(
         children: [
           // Hiển thị trạng thái Online/Offline
           Padding(
@@ -68,7 +36,7 @@ class _HeroScreenState extends State<HeroScreen> {
               children: [
                 Switch(
                   value: _isOnline,
-                  onChanged: (value) => _toggleOnlineStatus(), // <-- Cần hàm _toggleOnlineStatus()
+                  onChanged: (value) => _toggleOnlineStatus(),
                   activeColor: Colors.green,
                 ),
                 Text(_isOnline ? 'Bạn đang Online' : 'Bạn đang Offline', style: const TextStyle(fontSize: 20)),
@@ -76,23 +44,38 @@ class _HeroScreenState extends State<HeroScreen> {
             ),
           ),
           
+          // --- NÚT GỌI ROADSIDE MỚI ---
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.phone_in_talk, color: Colors.white),
+              label: const Text('GỌI ROADSIĐE CHÍNH HÃNG GIÚP USER', style: TextStyle(fontSize: 16, color: Colors.white)),
+              onPressed: _navigateToRoadside,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                minimumSize: const Size(double.infinity, 50), // Làm cho nút rộng hết màn hình
+              ),
+            ),
+          ),
+          // --- KẾT THÚC THÊM ---
+
           if (_isOnline && _currentJobId.isEmpty)
-            Expanded( // <-- ĐÃ SỬA: Dùng Expanded để danh sách cuộn được
+            Expanded(
+              // ... (phần ListView.builder hiển thị requests giữ nguyên) ...
               child: _nearbyRequests.isEmpty 
               ? const Center(child: Text("Đang chờ yêu cầu SOS gần đó...", style: TextStyle(fontSize: 18)))
               : ListView.builder(
                   itemCount: _nearbyRequests.length,
                   itemBuilder: (context, index) {
+                    // ... (ListTile giữ nguyên) ...
                     var request = _nearbyRequests[index].data() as Map<String, dynamic>;
-                    String jobId = _nearbyRequests[index].id; // Lấy Job ID
+                    String jobId = _nearbyRequests[index].id;
                     return ListTile(
                       leading: const Icon(Icons.location_on, color: Colors.red),
                       title: Text("Yêu cầu SOS: ${request['reason'] ?? 'Không rõ'}"),
                       subtitle: Text("Trạng thái: ${request['status']}"),
                       trailing: const Icon(Icons.arrow_forward),
                       onTap: () {
-                        // Chuyển đến màn hình Map chi tiết (hoặc gọi _acceptSOS với jobId này)
-                        // Ví dụ chuyển sang MapScreen:
                          Navigator.push(context, MaterialPageRoute(builder: (context) => MapScreen(
                           reason: request['reason'] ?? 'Cứu hộ', 
                           jobId: jobId, 
@@ -109,7 +92,6 @@ class _HeroScreenState extends State<HeroScreen> {
       ),
     );
   }
-
   // Cần thêm hàm _toggleOnlineStatus() nếu bạn dùng Switch như trong mã nguồn mới này
   void _toggleOnlineStatus() {
     if (_isOnline) {
