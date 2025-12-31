@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "183082399206",
+    "project_id": "sos-battery-dfa5e",
+    "storage_bucket": "sos-battery-dfa5e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:183082399206:android:f589f7a92cb2584a9c9227",
+        "android_client_info": {
+          "package_name": "com.sosbattery.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC0sfg8ASLJpNYQZgMPipVbhgRvdfmMJg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

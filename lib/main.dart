@@ -1,15 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'core/location_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'features/auth/presentation/pages/login_page.dart';  // đường dẫn đúng
 import 'features/sos/presentation/pages/home_page.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await LocationService.init();   // Khởi động service
-  LocationService.start();        // Bắt đầu tracking
-  runApp(const ProviderScope(child: SOSBatteryApp()));
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('Firebase initialized successfully!');
+  } catch (e, stack) {
+    print('LỖI INIT FIREBASE: $e');
+    print(stack);
+  }
+
+  runApp(
+    const ProviderScope(
+      child: SOSBatteryApp(),
+    ),
+  );
 }
 
 class SOSBatteryApp extends StatelessWidget {
@@ -21,7 +36,23 @@ class SOSBatteryApp extends StatelessWidget {
       title: 'SOS-BATTERY',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: Colors.black),
-      home: const HomePage(),
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              backgroundColor: Colors.black,
+              body: Center(child: CircularProgressIndicator(color: Colors.red)),
+            );
+          }
+
+          if (snapshot.hasData) {
+            return const HomePage();
+          }
+
+          return LoginPage();  // <-- xóa "const" ở đây
+        },
+      ),
     );
   }
 }

@@ -1,8 +1,10 @@
-import 'dart:async';   // Cho Timer
-import 'dart:ui';      // Cho DartPluginRegistrant
+// ignore_for_file: unnecessary_brace_in_string_interps
+
+import 'dart:async'; // Cho Timer
+import 'dart:ui'; // Cho DartPluginRegistrant
+import 'package:flutter/foundation.dart'; // For kDebugMode
 
 import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
@@ -25,7 +27,7 @@ class LocationService {
 
   @pragma('vm:entry-point')
   static void onStart(ServiceInstance service) async {
-    DartPluginRegistrant.ensureInitialized();   // Đã có import dart:ui
+    DartPluginRegistrant.ensureInitialized(); // Đã có import dart:ui
 
     if (service is AndroidServiceInstance) {
       service.setForegroundNotificationInfo(
@@ -40,12 +42,19 @@ class LocationService {
         distanceFilter: 10,
       ),
     ).listen((Position position) {
-      print('📍 Background Location: ${position.latitude}, ${position.longitude}');
-      // TODO: Gửi lên Firestore cho Hero online
+      if (kDebugMode) {
+        var latitude = position.latitude;
+        print('Background location: ${latitude}, ${position.longitude}');
+      }
+      // Forward location to the main isolate / uploader via the background service
+      service.invoke('updateLocation', {
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
     });
 
     Timer.periodic(const Duration(seconds: 60), (timer) {
-      print('❤️ Heartbeat - Service still alive');
       service.invoke('heartbeat');
     });
 
@@ -56,11 +65,9 @@ class LocationService {
 
   static void start() {
     _service.startService();
-    print('✅ Background Location Service started');
   }
 
   static void stop() {
     _service.invoke('stopService');
-    print('❌ Background Location Service stopped');
   }
 }

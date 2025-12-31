@@ -3,14 +3,19 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")  // <-- Đúng chỗ này, ở trong block plugins
 }
+
+// KHÔNG CẦN dòng này nữa vì đã khai báo trong plugins block ở trên
+// apply(plugin = "com.google.gms.google-services")  <-- XÓA DÒNG NÀY ĐI
 
 android {
     namespace = "com.sosbattery.app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -20,20 +25,18 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.sosbattery.app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0.0"
+
+        multiDexEnabled = true  // Đúng chỗ này
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Để tạm dùng debug key cho release (sau này thay bằng key thật)
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -41,4 +44,10 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
+    // Nếu bạn dùng MultiDex (vì multiDexEnabled = true), thêm dòng này nếu cần
+    // implementation("androidx.multidex:multidex:2.0.1")
 }

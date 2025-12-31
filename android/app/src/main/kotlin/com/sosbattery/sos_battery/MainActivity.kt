@@ -1,4 +1,4 @@
-package com.sosbattery.sos_battery
+package com.sosbattery.app
 
 import io.flutter.embedding.android.FlutterActivity
 

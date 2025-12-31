@@ -1,49 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:developer' as dev; // <-- ĐÃ THÊM: Để debug lỗi
 
 class DonateScreen extends StatelessWidget {
-  // Thay link Stripe của bro (tạo tại https://dashboard.stripe.com/donations)
-  // Đây là ví dụ placeholder, bạn cần thay bằng link thật của mình
-  final String stripeLink = "https://donate.stripe.com/your_stripe_link_here"; 
-
-  const DonateScreen({super.key}); // <-- ĐÃ THÊM: Constructor const
-
-  Future<void> _donate(BuildContext context) async { // <-- ĐÃ SỬA: Thêm context
-    final Uri uri = Uri.parse(stripeLink);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      dev.log("Không thể mở URL quyên góp: $stripeLink");
-      ScaffoldMessenger.of(context).showSnackBar( // <-- ĐÃ THÊM: Thông báo lỗi
-        const SnackBar(content: Text("Không thể mở trang quyên góp. Vui lòng thử lại sau."), backgroundColor: Colors.red),
-      );
-    }
-  }
+  const DonateScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Donate cho SOS Battery')),
-      body: Center(
-        child: Padding( // <-- ĐÃ THÊM: Padding cho nội dung
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Cảm ơn bạn đã ủng hộ SOS Battery! 100% tiền về đội ngũ Dallas', 
-                style: TextStyle(fontSize: 20),
-                textAlign: TextAlign.center,
+      appBar: AppBar(
+        title: const Text('Support SOS Battery'),
+        backgroundColor: Colors.green[800],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.favorite,
+              color: Colors.red,
+              size: 100,
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Thank you for using SOS Battery!',
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Your donation helps keep the app free for everyone in need. Every contribution counts!',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+            const SizedBox(height: 40),
+            // Nut donate bat dau tu day
+            // Nút Donate chung (customer choose amount)
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
               ),
-              const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: () => _donate(context), // <-- ĐÃ SỬA: Truyền context
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, padding: const EdgeInsets.all(20)),
-                child: const Text('DONATE VIA STRIPE', style: TextStyle(fontSize: 30)),
-              ),
-            ],
-          ),
+              onPressed: () async {
+                const String stripeLink =
+                    'https://buy.stripe.com/test_3cIaEXB388PgBdw1B600'; // link test bro copy
+                if (await canLaunchUrl(Uri.parse(stripeLink))) {
+                  await launchUrl(Uri.parse(stripeLink),
+                      mode: LaunchMode.externalApplication);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Cannot open donation link')),
+                  );
+                }
+              },
+              child: const Text('Donate Now (choose amount)',
+                  style: TextStyle(color: Colors.white, fontSize: 18)),
+            ),
+            // End nut donate
+
+            const Text(
+              'All donations go toward maintaining and improving the app.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+          ],
         ),
       ),
     );

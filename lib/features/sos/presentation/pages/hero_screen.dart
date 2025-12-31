@@ -1,104 +1,331 @@
 import 'package:flutter/material.dart';
-// ... các imports khác ...
-import 'roadside_screen.dart'; // <-- ĐÃ THÊM: Import RoadsideScreen
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart' as latlng;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async'; // cho Timer
+import 'package:sos_battery/features/sos/presentation/pages/hero_screen_accepted.dart'; // Accepted screen
+import 'package:sos_battery/features/sos/presentation/pages/hero_profile_screen.dart'; // sửa import đúng
 
-class HeroScreen extends StatefulWidget {
+class HeroScreen extends ConsumerStatefulWidget {
   const HeroScreen({super.key});
 
   @override
-  State<HeroScreen> createState() => _HeroScreenState();
+  ConsumerState<HeroScreen> createState() => _HeroScreenState();
 }
 
-class _HeroScreenState extends State<HeroScreen> {
-  // ... (các biến trạng thái và hàm initState, dispose, etc. giữ nguyên) ...
-  bool _isOnline = false;
-  // ...
+class _HeroScreenState extends ConsumerState<HeroScreen> {
+  latlng.LatLng _heroPosition =
+      latlng.LatLng(32.7767, -96.7970); // Default Arlington, Texas
+  List<Map<String, dynamic>> _sosList = [];
+  bool _isLoading = true;
+  bool _isOnline = false; // trạng thái online/offline
 
-  // Hàm chuyển đến màn hình gọi Roadside
-  void _navigateToRoadside() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const RoadsideScreen()),
+  final MapController _mapController = MapController();
+
+  @override
+  void initState() {
+    super.initState();
+    _getHeroLocation();
+  }
+
+  Future<void> _getHeroLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location services are disabled')));
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Location permission denied')));
+          setState(() => _isLoading = false);
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Location permission permanently denied')));
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      setState(() {
+        _heroPosition = latlng.LatLng(position.latitude, position.longitude);
+        _isLoading = false;
+      });
+      _mapController.move(_heroPosition, 13.0);
+    } catch (e) {
+      print('Location error: $e');
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error getting location: $e')));
+    }
+  }
+
+  void _listenToOpenSOS() {
+    if (!_isOnline) return;
+
+    FirebaseFirestore.instance
+        .collection('sos_requests')
+        .where('status', isEqualTo: 'open')
+        .snapshots()
+        .listen((QuerySnapshot snapshot) {
+      List<Map<String, dynamic>> requests = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>?;
+        if (data == null) continue;
+
+        final GeoPoint? pos = data['location'] as GeoPoint?;
+        if (pos == null) continue;
+
+        double distance = Geolocator.distanceBetween(
+              _heroPosition.latitude,
+              _heroPosition.longitude,
+              pos.latitude,
+              pos.longitude,
+            ) /
+            1000;
+
+        requests.add({
+          'id': doc.id,
+          'driverId': data['driverId'] as String? ?? 'unknown',
+          'reason': data['reason'] as String? ?? 'Unknown Reason',
+          'location': pos,
+          'timestamp': data['timestamp'],
+          'distance': distance,
+        });
+      }
+
+      requests.sort((a, b) => a['distance'].compareTo(b['distance']));
+
+      setState(() {
+        _sosList = requests;
+      });
+    });
+  }
+
+  // Bat dau tu day
+  void _toggleOnline() {
+    setState(() {
+      _isOnline = !_isOnline;
+    });
+    if (_isOnline) {
+      _listenToOpenSOS();
+      _startMcoinCounter(); // bắt đầu đếm Mcoin
+    } else {
+      _stopMcoinCounter();
+    }
+  }
+
+  Timer? _mcoinTimer;
+  void _startMcoinCounter() {
+    _mcoinTimer = Timer.periodic(const Duration(seconds: 60), (timer) {
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+      FirebaseFirestore.instance.collection('heroes').doc(uid).update({
+        'mcoin': FieldValue.increment(1),
+        'totalPoints': FieldValue.increment(1),
+        'onlineTime': FieldValue.increment(60),
+      });
+    });
+  }
+
+  void _stopMcoinCounter() {
+    _mcoinTimer?.cancel();
+  }
+  // Ket thuc o day.
+
+  void _acceptSOS(String sosId, String driverId) async {
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Accept SOS?'),
+          content: const Text('This will lock the job for you. Ready to help?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Yes, I\'m coming!',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
+
+    if (confirm != true) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('sos_requests')
+          .doc(sosId)
+          .update({
+        'status': 'accepted',
+        'heroId': FirebaseAuth.instance.currentUser!.uid,
+        'acceptedTime': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Job locked! Heading to location...'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => HeroScreenAccepted(sosId: sosId, driverId: driverId),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Hero Mode')),
-      body: Column(
-        children: [
-          // Hiển thị trạng thái Online/Offline
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Switch(
-                  value: _isOnline,
-                  onChanged: (value) => _toggleOnlineStatus(),
-                  activeColor: Colors.green,
-                ),
-                Text(_isOnline ? 'Bạn đang Online' : 'Bạn đang Offline', style: const TextStyle(fontSize: 20)),
-              ],
-            ),
+      appBar: AppBar(
+        title: const Text('Hero Mode'),
+        backgroundColor: Colors.green[800],
+        actions: [
+          Switch(
+            value: _isOnline,
+            onChanged: (_) => _toggleOnline(),
+            activeColor: Colors.white,
+            activeTrackColor: Colors.green,
+            inactiveThumbColor: Colors.white,
+            inactiveTrackColor: Colors.grey,
           ),
-          
-          // --- NÚT GỌI ROADSIDE MỚI ---
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-            child: ElevatedButton.icon(
-              icon: const Icon(Icons.phone_in_talk, color: Colors.white),
-              label: const Text('GỌI ROADSIĐE CHÍNH HÃNG GIÚP USER', style: TextStyle(fontSize: 16, color: Colors.white)),
-              onPressed: _navigateToRoadside,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                minimumSize: const Size(double.infinity, 50), // Làm cho nút rộng hết màn hình
-              ),
-            ),
+          const Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: Text('Online', style: TextStyle(color: Colors.white)),
           ),
-          // --- KẾT THÚC THÊM ---
-
-          if (_isOnline && _currentJobId.isEmpty)
-            Expanded(
-              // ... (phần ListView.builder hiển thị requests giữ nguyên) ...
-              child: _nearbyRequests.isEmpty 
-              ? const Center(child: Text("Đang chờ yêu cầu SOS gần đó...", style: TextStyle(fontSize: 18)))
-              : ListView.builder(
-                  itemCount: _nearbyRequests.length,
-                  itemBuilder: (context, index) {
-                    // ... (ListTile giữ nguyên) ...
-                    var request = _nearbyRequests[index].data() as Map<String, dynamic>;
-                    String jobId = _nearbyRequests[index].id;
-                    return ListTile(
-                      leading: const Icon(Icons.location_on, color: Colors.red),
-                      title: Text("Yêu cầu SOS: ${request['reason'] ?? 'Không rõ'}"),
-                      subtitle: Text("Trạng thái: ${request['status']}"),
-                      trailing: const Icon(Icons.arrow_forward),
-                      onTap: () {
-                         Navigator.push(context, MaterialPageRoute(builder: (context) => MapScreen(
-                          reason: request['reason'] ?? 'Cứu hộ', 
-                          jobId: jobId, 
-                          isHero: true,
-                        )));
-                      },
-                    );
-                  },
-                ),
-            )
-          else if (_currentJobId.isNotEmpty)
-             Text('Đang trên đường đến Job $_currentJobId', style: const TextStyle(fontSize: 18, color: Colors.blue)),
         ],
       ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.green))
+          : Column(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: _heroPosition,
+                      initialZoom: 13.0,
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.sosbattery.app',
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: _heroPosition,
+                            width: 60,
+                            height: 60,
+                            child: const Icon(
+                              Icons.shield,
+                              color: Colors.green,
+                              size: 60,
+                            ),
+                          ),
+                          ..._sosList.map((sos) {
+                            GeoPoint pos = sos['location'];
+                            return Marker(
+                              point: latlng.LatLng(pos.latitude, pos.longitude),
+                              width: 50,
+                              height: 50,
+                              child: const Icon(
+                                Icons.error,
+                                color: Colors.red,
+                                size: 50,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: _sosList.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No SOS requests nearby\nGo online to help!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: _sosList.length,
+                          itemBuilder: (context, index) {
+                            var sos = _sosList[index];
+                            return Card(
+                              color: Colors.grey[850],
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 8),
+                              child: ListTile(
+                                leading: Icon(
+                                  sos['reason'] == 'Dead Battery'
+                                      ? Icons.battery_alert
+                                      : sos['reason'] == 'Flat Tire'
+                                          ? Icons.tire_repair
+                                          : sos['reason'] == 'Out of Fuel'
+                                              ? Icons.local_gas_station
+                                              : Icons.help_outline,
+                                  color: Colors.red,
+                                  size: 40,
+                                ),
+                                title: Text(
+                                  sos['reason'] ?? 'Unknown Reason',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                subtitle: Text(
+                                  'Distance: ${sos['distance'].toStringAsFixed(1)} km',
+                                  style: const TextStyle(color: Colors.grey),
+                                ),
+                                trailing: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green),
+                                  onPressed: () =>
+                                      _acceptSOS(sos['id'], sos['driverId']),
+                                  child: const Text('I\'m coming',
+                                      style: TextStyle(color: Colors.white)),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
-  }
-  // Cần thêm hàm _toggleOnlineStatus() nếu bạn dùng Switch như trong mã nguồn mới này
-  void _toggleOnlineStatus() {
-    if (_isOnline) {
-      // Logic go offline
-      setState(() => _isOnline = false);
-    } else {
-      _goOnline(); // Gọi hàm go online đã viết
-    }
   }
 }

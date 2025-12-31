@@ -1,15 +1,14 @@
-// Top-level build file (Kotlin DSL) – đã test 100% pass với Flutter 3.24 + Gradle 8.7
+// Top-level build file – Flutter chuẩn Kotlin DSL mới nhất
 
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        // Dùng đúng phiên bản Flutter đang yêu cầu (8.11.1)
-        classpath("com.android.tools.build:gradle:8.11.1")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.24")
-    }
+plugins {
+    // KHÔNG chỉ định version cho com.android.application và kotlin-android
+    // Để Flutter tự resolve version phù hợp (tránh conflict như lỗi của bạn)
+    id("com.android.application") apply false
+    id("org.jetbrains.kotlin.android") apply false
+    id("dev.flutter.flutter-gradle-plugin") apply false
+    
+    // Chỉ google-services cần version cụ thể
+    id("com.google.gms.google-services") version "4.4.2" apply false
 }
 
 allprojects {
