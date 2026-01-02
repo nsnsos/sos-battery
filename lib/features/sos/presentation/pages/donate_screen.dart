@@ -24,10 +24,7 @@ class DonateScreen extends StatelessWidget {
             const SizedBox(height: 20),
             const Text(
               'Thank you for using SOS Battery!',
-              style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
@@ -37,30 +34,26 @@ class DonateScreen extends StatelessWidget {
               style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(height: 40),
-            // Nut donate bat dau tu day
-            // Nút Donate chung (customer choose amount)
+
+            // Nút Donate chung (customer choose amount) - link thật của bro
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
               ),
               onPressed: () async {
-                const String stripeLink =
-                    'https://buy.stripe.com/test_3cIaEXB388PgBdw1B600'; // link test bro copy
+                const String stripeLink = 'https://buy.stripe.com/3cIaEX3B388Pg2Bdwh1B600'; // LINK THẬT CỦA BRO
                 if (await canLaunchUrl(Uri.parse(stripeLink))) {
-                  await launchUrl(Uri.parse(stripeLink),
-                      mode: LaunchMode.externalApplication);
+                  await launchUrl(Uri.parse(stripeLink), mode: LaunchMode.externalApplication);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Cannot open donation link')),
                   );
                 }
               },
-              child: const Text('Donate Now (choose amount)',
-                  style: TextStyle(color: Colors.white, fontSize: 18)),
+              child: const Text('Donate Now (choose amount)', style: TextStyle(color: Colors.white, fontSize: 18)),
             ),
-            // End nut donate
+            const SizedBox(height: 20),
 
             const Text(
               'All donations go toward maintaining and improving the app.',
