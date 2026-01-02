@@ -170,12 +170,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo mới (thay icon pin cũ)
-              Image.asset(
-                'assets/icons/logososclear.png',
-                width: 150, // kích thước bro thích
-                height: 150,
-              ),
-              const SizedBox(height: 20),
+              //Image.asset(
+              //  'assets/icons/logososclear.png',
+              //  width: 150, // kích thước bro thích
+              //  height: 150,
+              //),
+              //const SizedBox(height: 20),
 
               const Text(
                 'SOS Battery',
