@@ -45,5 +45,9 @@
     <true/>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>SOS Battery needs your location to send SOS requests, show your position on the map for Heroes to find you, and track real-time rescue progress.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>SOS Battery needs your location while using the app to send SOS requests, display your position on the map for nearby Heroes, and provide real-time rescue updates.</string>
 </dict>
 </plist>
