@@ -10,11 +10,17 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(
-    const ProviderScope(
-      child: SOSBatteryApp(),
-    ),
-  );
+  // Khởi tạo Firebase
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("Firebase initialized successfully");
+  } catch (e) {
+    print("Firebase initialization failed: $e");
+  }
+
+  runApp(const ProviderScope(child: SOSBatteryApp()));
 }
 
 class SOSBatteryApp extends StatelessWidget {
@@ -31,7 +37,7 @@ class SOSBatteryApp extends StatelessWidget {
   }
 }
 
-/// ⚡ Splash + Firebase Init + Auto-login
+/// Splash + Firebase Init + Auto-login
 class InitializationScreen extends StatefulWidget {
   const InitializationScreen({super.key});
 
@@ -55,15 +61,17 @@ class _InitializationScreenState extends State<InitializationScreen> {
         options: DefaultFirebaseOptions.currentPlatform,
       );
       setState(() => _initialized = true);
-    } catch (e, stack) {
+    } catch (e) {
       print('LỖI INIT FIREBASE: $e');
-      print(stack);
-      setState(() => _error = true);
+      setState(() {
+        _error = true;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Firebase init failed
     if (_error) {
       return Scaffold(
         backgroundColor: Colors.black,
@@ -77,6 +85,7 @@ class _InitializationScreenState extends State<InitializationScreen> {
       );
     }
 
+    // Firebase is still initializing
     if (!_initialized) {
       return const Scaffold(
         backgroundColor: Colors.black,
@@ -86,11 +95,11 @@ class _InitializationScreenState extends State<InitializationScreen> {
       );
     }
 
-    // ✅ Firebase đã init → kiểm tra auth
+    // Firebase initialized successfully
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // Loading state
+        // While loading, show a loading indicator
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             backgroundColor: Colors.black,
@@ -100,13 +109,13 @@ class _InitializationScreenState extends State<InitializationScreen> {
           );
         }
 
-        // User đã login
+        // User is logged in
         if (snapshot.hasData) {
           return const HomePage();
         }
 
-        // Chưa login
-        return LoginPage();
+        // User is not logged in
+        return const LoginPage();
       },
     );
   }
