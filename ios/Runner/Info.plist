@@ -2,6 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
 
@@ -27,7 +28,7 @@
     <string>1.0.8</string>
 
     <key>CFBundleVersion</key>
-    <string>8</string>
+    <string>9</string>
 
     <key>LSRequiresIPhoneOS</key>
     <true/>
@@ -41,27 +42,70 @@
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
 
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+
+    <!-- App Transport Security -->
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsArbitraryLoads</key>
         <true/>
     </dict>
 
+    <!-- Camera -->
     <key>NSCameraUsageDescription</key>
-    <string>App cần camera để hoạt động</string>
+    <string>Ứng dụng cần camera để hỗ trợ gửi thông tin SOS.</string>
 
+    <!-- Photo -->
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Cho phép truy cập ảnh</string>
+    <string>Ứng dụng cần truy cập thư viện ảnh để gửi thông tin SOS.</string>
 
+    <!-- Location -->
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>SOS Battery cần vị trí để gửi SOS</string>
+    <string>SOS Battery cần vị trí của bạn để gửi yêu cầu cứu hộ.</string>
 
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>SOS Battery cần vị trí để hỗ trợ cứu hộ</string>
+    <string>SOS Battery cần vị trí của bạn để theo dõi và hỗ trợ cứu hộ liên tục.</string>
 
+    <!-- Background modes (bắt buộc cho SOS / foreground task) -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+        <string>fetch</string>
+    </array>
+
+    <!-- Notification -->
+    <key>NSUserNotificationUsageDescription</key>
+    <string>Ứng dụng cần gửi thông báo để cảnh báo và cập nhật tình trạng SOS.</string>
+
+    <!-- Google Sign-In (đổi xxxxxx thành ID thật của bạn) -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>866840305174-ru9osmjche22n446ni2t6nslbo8mlurc.apps.googleusercontent.com</string>
+            </array>
+        </dict>
+    </array>
+
+    <!-- Encryption -->
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+    <true/>
+
 </dict>
 </plist>
