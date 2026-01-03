@@ -28,7 +28,7 @@
     <string>1.0.8</string>
 
     <key>CFBundleVersion</key>
-    <string>9</string>
+    <string>10</string>
 
     <key>LSRequiresIPhoneOS</key>
     <true/>
@@ -95,11 +95,11 @@
             <string>Editor</string>
             <key>CFBundleURLSchemes</key>
             <array>
-                <string>866840305174-ru9osmjche22n446ni2t6nslbo8mlurc.apps.googleusercontent.com</string>
+            <string>com.googleusercontent.apps.1-183082399206-ios-fe7a5ccd344c46549c9227</string>  
             </array>
         </dict>
     </array>
-
+    
     <!-- Encryption -->
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
