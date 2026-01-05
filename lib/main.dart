@@ -23,7 +23,9 @@ void main() async {
     print('Stack trace: $stack');
     // Nếu fail, app vẫn chạy nhưng auth không hoạt động
   }
-
+  //khoi tao Background Service
+  await initializeBackgroundService(); // Thêm dòng này
+  // End khoi tao BS
   runApp(const ProviderScope(child: SOSBatteryApp()));
 }
 
@@ -66,7 +68,8 @@ class _InitializationScreenState extends State<InitializationScreen> {
           options: DefaultFirebaseOptions.currentPlatform,
         );
       }
-      await Future.delayed(const Duration(milliseconds: 500)); // delay nhỏ để đảm bảo
+      await Future.delayed(
+          const Duration(milliseconds: 500)); // delay nhỏ để đảm bảo
       setState(() {
         _initialized = true;
       });
