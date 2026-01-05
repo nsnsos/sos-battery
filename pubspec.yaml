@@ -30,7 +30,6 @@ dependencies:
   # Background service (Giải pháp chạy ngầm tốt nhất hiện nay)
   # Dùng kết hợp cái này với geolocator để lấy vị trí ngầm mà không bị lỗi Namespace
   flutter_background_service: ^5.1.0 
-  flutter_local_notifications: ^17.2.3 # để show notification local nếu cần
 
   # UI & Animation
   confetti: ^0.8.0
