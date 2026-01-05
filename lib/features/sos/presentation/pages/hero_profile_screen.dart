@@ -21,10 +21,30 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
   bool _isLoading = false;
 
   final List<Map<String, dynamic>> _paymentOptions = [
-    {'name': 'Venmo', 'icon': Icons.payment, 'color': Colors.blue, 'field': 'venmoUsername'},
-    {'name': 'Cash App', 'icon': Icons.money, 'color': Colors.green, 'field': 'cashAppUsername'},
-    {'name': 'Apple Pay', 'icon': Icons.apple, 'color': Colors.black, 'field': 'applePayEmail'},
-    {'name': 'Zelle', 'icon': Icons.send, 'color': Colors.purple, 'field': 'zelleEmail'},
+    {
+      'name': 'Venmo',
+      'icon': Icons.payment,
+      'color': Colors.blue,
+      'field': 'venmoUsername'
+    },
+    {
+      'name': 'Cash App',
+      'icon': Icons.money,
+      'color': Colors.green,
+      'field': 'cashAppUsername'
+    },
+    {
+      'name': 'Apple Pay',
+      'icon': Icons.apple,
+      'color': Colors.black,
+      'field': 'applePayEmail'
+    },
+    {
+      'name': 'Zelle',
+      'icon': Icons.send,
+      'color': Colors.purple,
+      'field': 'zelleEmail'
+    },
   ];
 
   List<String> _selectedMethods = [];
@@ -37,7 +57,8 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
 
   Future<void> _loadProfile() async {
     String uid = FirebaseAuth.instance.currentUser!.uid;
-    DocumentSnapshot doc = await FirebaseFirestore.instance.collection('heroes').doc(uid).get();
+    DocumentSnapshot doc =
+        await FirebaseFirestore.instance.collection('heroes').doc(uid).get();
     if (doc.exists) {
       var data = doc.data() as Map<String, dynamic>;
       setState(() {
@@ -49,7 +70,8 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
         _applePayEmail = data['applePayEmail'] ?? '';
         _zelleEmail = data['zelleEmail'] ?? '';
         _selectedMethods = _paymentOptions
-            .where((option) => data[option['field']] != null && data[option['field']] != '')
+            .where((option) =>
+                data[option['field']] != null && data[option['field']] != '')
             .map((option) => option['field'] as String)
             .toList();
       });
@@ -78,11 +100,15 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
       });
     }
 
-    await FirebaseFirestore.instance.collection('heroes').doc(uid).set(updateData, SetOptions(merge: true));
+    await FirebaseFirestore.instance
+        .collection('heroes')
+        .doc(uid)
+        .set(updateData, SetOptions(merge: true));
 
     setState(() => _isLoading = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile updated!'), backgroundColor: Colors.green),
+      const SnackBar(
+          content: Text('Profile updated!'), backgroundColor: Colors.green),
     );
   }
 
@@ -104,13 +130,17 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
                   children: [
                     const Text(
                       'Basic Info',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
                     ),
                     const SizedBox(height: 10),
 
                     TextFormField(
                       initialValue: _name,
-                      decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                          labelText: 'Full Name', border: OutlineInputBorder()),
                       validator: (value) => value!.isEmpty ? 'Required' : null,
                       onChanged: (value) => _name = value,
                     ),
@@ -118,7 +148,9 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
 
                     TextFormField(
                       initialValue: _phone,
-                      decoration: const InputDecoration(labelText: 'Phone Number', border: OutlineInputBorder()),
+                      decoration: const InputDecoration(
+                          labelText: 'Phone Number',
+                          border: OutlineInputBorder()),
                       keyboardType: TextInputType.phone,
                       validator: (value) => value!.isEmpty ? 'Required' : null,
                       onChanged: (value) => _phone = value,
@@ -127,7 +159,10 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
 
                     const Text(
                       'Register to Receive Tips (optional)',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
                     ),
                     const SizedBox(height: 10),
 
@@ -135,10 +170,13 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
                       spacing: 10,
                       runSpacing: 10,
                       children: _paymentOptions.map((option) {
-                        bool isSelected = _selectedMethods.contains(option['field']);
+                        bool isSelected =
+                            _selectedMethods.contains(option['field']);
                         return FilterChip(
                           label: Text(option['name']),
-                          avatar: Icon(option['icon'], color: isSelected ? Colors.white : option['color']),
+                          avatar: Icon(option['icon'],
+                              color:
+                                  isSelected ? Colors.white : option['color']),
                           selected: isSelected,
                           backgroundColor: Colors.grey[800],
                           selectedColor: option['color'],
@@ -160,19 +198,27 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
 
                     // Field nhập username cho từng phương thức đã chọn
                     ..._selectedMethods.map((field) {
-                      String label = field == 'venmoUsername' ? 'Venmo Username' :
-                                     field == 'cashAppUsername' ? 'Cash App Username' :
-                                     field == 'applePayEmail' ? 'Apple Pay Email' :
-                                     'Zelle Email';
+                      String label = field == 'venmoUsername'
+                          ? 'Venmo Username'
+                          : field == 'cashAppUsername'
+                              ? 'Cash App Username'
+                              : field == 'applePayEmail'
+                                  ? 'Apple Pay Email'
+                                  : 'Zelle Email';
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 20),
                         child: TextFormField(
-                          decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+                          decoration: InputDecoration(
+                              labelText: label,
+                              border: const OutlineInputBorder()),
                           onChanged: (value) {
-                            if (field == 'venmoUsername') _venmoUsername = value;
-                            if (field == 'cashAppUsername') _cashAppUsername = value;
-                            if (field == 'applePayEmail') _applePayEmail = value;
+                            if (field == 'venmoUsername')
+                              _venmoUsername = value;
+                            if (field == 'cashAppUsername')
+                              _cashAppUsername = value;
+                            if (field == 'applePayEmail')
+                              _applePayEmail = value;
                             if (field == 'zelleEmail') _zelleEmail = value;
                           },
                         ),
@@ -184,13 +230,17 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 40, vertical: 16),
                       ),
                       onPressed: _saveProfile,
-                      child: const Text('Save Profile', style: TextStyle(color: Colors.white, fontSize: 18)),
+                      child: const Text('Save Profile',
+                          style: TextStyle(color: Colors.white, fontSize: 18)),
                     ),
 
                     // Hiển thị MCoin & HCoin (tinh gọn, góc trên)
+                    //them phan test o day
+                    // Phần hiển thị MCoin & HCoin (tinh gọn, góc trên - thêm vào cuối Column)
                     const SizedBox(height: 40),
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -203,30 +253,76 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
                         children: [
                           Column(
                             children: [
-                              const Icon(Icons.timer, color: Colors.blue, size: 30),
+                              const Icon(Icons.timer,
+                                  color: Colors.blue, size: 30),
                               const SizedBox(height: 5),
                               StreamBuilder<DocumentSnapshot>(
-                                stream: FirebaseFirestore.instance.collection('heroes').doc(FirebaseAuth.instance.currentUser!.uid).snapshots(),
+                                stream: FirebaseFirestore.instance
+                                    .collection('heroes')
+                                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                                    .snapshots(),
                                 builder: (context, snapshot) {
-                                  if (!snapshot.hasData || !snapshot.data!.exists) return const Text('MCoin: 0', style: TextStyle(color: Colors.white));
-                                  var data = snapshot.data!.data() as Map<String, dynamic>;
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Text('Loading...',
+                                        style: TextStyle(color: Colors.white));
+                                  }
+                                  if (snapshot.hasError) {
+                                    return Text('Error: ${snapshot.error}',
+                                        style:
+                                            const TextStyle(color: Colors.red));
+                                  }
+                                  if (!snapshot.hasData ||
+                                      !snapshot.data!.exists) {
+                                    return const Text('No stats yet',
+                                        style: TextStyle(color: Colors.grey));
+                                  }
+
+                                  var data = snapshot.data!.data()
+                                      as Map<String, dynamic>;
                                   int mcoin = data['mcoin'] ?? 0;
-                                  return Text('MCoin: $mcoin', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold));
+                                  return Text('MCoin: $mcoin',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold));
                                 },
                               ),
                             ],
                           ),
                           Column(
                             children: [
-                              const Icon(Icons.volunteer_activism, color: Colors.green, size: 30),
+                              const Icon(Icons.volunteer_activism,
+                                  color: Colors.green, size: 30),
                               const SizedBox(height: 5),
                               StreamBuilder<DocumentSnapshot>(
-                                stream: FirebaseFirestore.instance.collection('heroes').doc(FirebaseAuth.instance.currentUser!.uid).snapshots(),
+                                stream: FirebaseFirestore.instance
+                                    .collection('heroes')
+                                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                                    .snapshots(),
                                 builder: (context, snapshot) {
-                                  if (!snapshot.hasData || !snapshot.data!.exists) return const Text('HCoin: 0', style: TextStyle(color: Colors.white));
-                                  var data = snapshot.data!.data() as Map<String, dynamic>;
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Text('Loading...',
+                                        style: TextStyle(color: Colors.white));
+                                  }
+                                  if (snapshot.hasError) {
+                                    return Text('Error: ${snapshot.error}',
+                                        style:
+                                            const TextStyle(color: Colors.red));
+                                  }
+                                  if (!snapshot.hasData ||
+                                      !snapshot.data!.exists) {
+                                    return const Text('No stats yet',
+                                        style: TextStyle(color: Colors.grey));
+                                  }
+
+                                  var data = snapshot.data!.data()
+                                      as Map<String, dynamic>;
                                   int hcoin = data['hcoin'] ?? 0;
-                                  return Text('HCoin: $hcoin', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold));
+                                  return Text('HCoin: $hcoin',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold));
                                 },
                               ),
                             ],
@@ -235,19 +331,48 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
                       ),
                     ),
 
-                    // Chi tiết stats (ẩn, mở rộng khi cần)
+// Chi tiết stats (ẩn, mở rộng khi cần - thêm vào cuối Column)
                     const SizedBox(height: 40),
                     ExpansionTile(
-                      title: const Text('View Detailed Hero Stats', style: TextStyle(color: Colors.white)),
+                      title: const Text('View Detailed Hero Stats',
+                          style: TextStyle(color: Colors.white)),
                       children: [
                         StreamBuilder<DocumentSnapshot>(
-                          stream: FirebaseFirestore.instance.collection('heroes').doc(FirebaseAuth.instance.currentUser!.uid).snapshots(),
+                          stream: FirebaseFirestore.instance
+                              .collection('heroes')
+                              .doc(FirebaseAuth.instance.currentUser!.uid)
+                              .snapshots(),
                           builder: (context, snapshot) {
-                            if (!snapshot.hasData || !snapshot.data!.exists) {
-                              return const Text('No stats yet', style: TextStyle(color: Colors.grey));
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Center(
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white)),
+                              );
                             }
 
-                            var data = snapshot.data!.data() as Map<String, dynamic>;
+                            if (snapshot.hasError) {
+                              return Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                    'Error loading stats: ${snapshot.error}',
+                                    style: const TextStyle(color: Colors.red)),
+                              );
+                            }
+
+                            if (!snapshot.hasData || !snapshot.data!.exists) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Text(
+                                    'No stats yet - Go online to earn MCoin!',
+                                    style: TextStyle(color: Colors.grey)),
+                              );
+                            }
+
+                            var data =
+                                snapshot.data!.data() as Map<String, dynamic>;
                             int totalPoints = data['totalPoints'] ?? 0;
                             int level = data['level'] ?? 1;
                             int streak = data['streak'] ?? 0;
@@ -258,12 +383,22 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Phone Number: $_phone', style: const TextStyle(color: Colors.white, fontSize: 16)),
-                                  Text('Total Points: $totalPoints', style: const TextStyle(color: Colors.white, fontSize: 16)),
-                                  Text('Level: $level', style: const TextStyle(color: Colors.white, fontSize: 16)),
-                                  Text('Streak: $streak days', style: const TextStyle(color: Colors.white, fontSize: 16)),
+                                  Text('Phone Number: $_phone',
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 16)),
+                                  Text('Total Points: $totalPoints',
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 16)),
+                                  Text('Level: $level',
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 16)),
+                                  Text('Streak: $streak days',
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 16)),
                                   const SizedBox(height: 10),
-                                  Text('Badges: ${badges.join(', ')}', style: const TextStyle(color: Colors.yellow, fontSize: 16)),
+                                  Text('Badges: ${badges.join(', ')}',
+                                      style: const TextStyle(
+                                          color: Colors.yellow, fontSize: 16)),
                                 ],
                               ),
                             );
@@ -271,6 +406,7 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
                         ),
                       ],
                     ),
+                    // ket thuc phan test streambuilder
                   ],
                 ),
               ),
