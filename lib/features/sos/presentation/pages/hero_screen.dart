@@ -25,6 +25,8 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
 
   final MapController _mapController = MapController();
 
+  Timer? _mcoinTimer;
+
   @override
   void initState() {
     super.initState();
@@ -118,7 +120,6 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
     });
   }
 
-  // Bat dau tu day
   void _toggleOnline() {
     setState(() {
       _isOnline = !_isOnline;
@@ -131,7 +132,6 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
     }
   }
 
-  Timer? _mcoinTimer;
   void _startMcoinCounter() {
     _mcoinTimer = Timer.periodic(const Duration(seconds: 60), (timer) {
       String uid = FirebaseAuth.instance.currentUser!.uid;
@@ -146,7 +146,6 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
   void _stopMcoinCounter() {
     _mcoinTimer?.cancel();
   }
-  // Ket thuc o day.
 
   void _acceptSOS(String sosId, String driverId) async {
     bool? confirm = await showDialog<bool>(
@@ -205,6 +204,7 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //
       appBar: AppBar(
         title: const Text('Hero Mode'),
         backgroundColor: Colors.green[800],
@@ -218,11 +218,21 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
             inactiveTrackColor: Colors.grey,
           ),
           const Padding(
-            padding: EdgeInsets.only(right: 16),
+            padding: EdgeInsets.only(right: 8),
             child: Text('Online', style: TextStyle(color: Colors.white)),
+          ),
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.white),
+            tooltip: 'My Profile',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const HeroProfileScreen()),
+              );
+            },
           ),
         ],
       ),
+      //
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.green))
           : Column(
