@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'core/background_service.dart'; // Thêm dòng này
 
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/sos/presentation/pages/home_page.dart';

@@ -32,7 +32,6 @@ Future<void> initializeBackgroundService() async {
 
 @pragma('vm:entry-point')
 Future<bool> onIosBackground(ServiceInstance service) async {
-  WidgetsFlutterBinding.ensureInitialized();
   DartPluginRegistrant.ensureInitialized();
   return true;
 }
@@ -40,7 +39,6 @@ Future<bool> onIosBackground(ServiceInstance service) async {
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
-  WidgetsFlutterBinding.ensureInitialized();
 
   if (service is AndroidServiceInstance) {
     service.setForegroundNotificationInfo(
@@ -50,20 +48,23 @@ void onStart(ServiceInstance service) async {
   }
 
   final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return; // Không login → không listen
+  if (user == null) return;
 
-  // Listen job hiện tại (SOS accepted)
-  FirebaseFirestore.instance.collection('sos_requests').where('heroId', isEqualTo: user.uid).where('status', isEqualTo: 'accepted').snapshots().listen((snapshot) {
+  // Listen job active (khi app background)
+  FirebaseFirestore.instance
+      .collection('sos_requests')
+      .where('heroId', isEqualTo: user.uid)
+      .where('status', isEqualTo: 'accepted')
+      .snapshots()
+      .listen((snapshot) {
     if (snapshot.docs.isNotEmpty) {
-      // Có job active → send push notification nếu app closed
-      FirebaseMessaging.instance.getToken().then((token) {
-        // Send push from server-side (nếu có backend) hoặc local notification
-        // Ví dụ: service.invoke('showNotification', {'title': 'Active Job', 'content': 'Reopen app to continue rescue!'});
-      });
+      print('Active job found in background - keeping connection');
+      // Có thể send local notification nếu cần
+      // service.invoke('showNotification', {'title': 'Active Job', 'content': 'Reopen app to continue!'});
     }
   });
 
-  // Keep app alive  (timer background)
+  // Keep alive timer
   Timer.periodic(const Duration(minutes: 1), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
@@ -73,8 +74,5 @@ void onStart(ServiceInstance service) async {
         );
       }
     }
-
-    // Sync realtime (listen Firebase changes in background)
-    // ... code listen SOS/job
   });
 }
