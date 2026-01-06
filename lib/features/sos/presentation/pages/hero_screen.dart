@@ -188,6 +188,11 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
           backgroundColor: Colors.green,
         ),
       );
+      // Lưu job ID để reopen app load lại
+      // THÊM DÒNG NÀY: Lưu job ID để reopen app load lại
+      await _saveJobState(sosId);
+      // final prefs = await SharedPreferences.getInstance();
+      // prefs.setString('active_job_id', sosId);
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -338,4 +343,12 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
             ),
     );
   }
+
+  //them vao day
+  Future<void> _saveJobState(String sosId) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('active_job_id', sosId);
+    print('Saved active job ID: $sosId'); // debug
+  }
+  //end ghi Job lai
 }

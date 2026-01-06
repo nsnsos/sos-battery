@@ -25,24 +25,40 @@ void main() async {
     // Nếu fail, app vẫn chạy nhưng auth không hoạt động
   }
   //khoi tao Background Service
-  await initializeBackgroundService(); // Thêm dòng này
+  // Load job active từ SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+  final activeJobId = prefs.getString('active_job_id');
   // End khoi tao BS
   runApp(const ProviderScope(child: SOSBatteryApp()));
 }
 
 class SOSBatteryApp extends StatelessWidget {
   const SOSBatteryApp({super.key});
-
+  //thay the
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SOS-BATTERY',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: Colors.black),
-      home: const InitializationScreen(),
+      home: activeJobId != null
+          ? _loadActiveJob(activeJobId!)
+          : const LoginPage(),
     );
   }
+  //End thay the
 }
+
+//
+Widget _loadActiveJob(String sosId) {
+  // Check Firestore status job
+  // Nếu job còn 'accepted' → HeroScreenAccepted
+  // Nếu không → xóa local + LoginPage
+  // Để đơn giản, tạm dùng HeroScreenAccepted (bro có thể check status sau)
+  return HeroScreenAccepted(
+      sosId: sosId, driverId: 'driver_id_from_prefs_or_firestore');
+}
+//
 
 class InitializationScreen extends StatefulWidget {
   const InitializationScreen({super.key});
@@ -58,6 +74,7 @@ class _InitializationScreenState extends State<InitializationScreen> {
   @override
   void initState() {
     super.initState();
+    //_initializeApp(); // Thay _waitForFirebase() bằng cái này
     _waitForFirebase();
   }
 
@@ -69,6 +86,9 @@ class _InitializationScreenState extends State<InitializationScreen> {
           options: DefaultFirebaseOptions.currentPlatform,
         );
       }
+      // BÂY GIỜ MỚI INIT BACKGROUND SERVICE – AN TOÀN!
+      // await initializeBackgroundService();
+
       await Future.delayed(
           const Duration(milliseconds: 500)); // delay nhỏ để đảm bảo
       setState(() {
@@ -127,4 +147,13 @@ class _InitializationScreenState extends State<InitializationScreen> {
       },
     );
   }
+
+  // Them save job State
+  // Thêm hàm này ở cuối file (ngoài class)
+  Future<void> _saveJobState(String sosId) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('active_job_id', sosId);
+    print('Saved active job ID: $sosId'); // debug
+  }
+  // End Save Job State
 }
