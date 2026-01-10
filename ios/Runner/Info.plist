@@ -77,7 +77,6 @@
     <string>SOS Battery cần vị trí của bạn để theo dõi và hỗ trợ cứu hộ liên tục.</string>
 
     <!-- Background modes (bắt buộc cho SOS / foreground task) -->
-      //start
     <!-- Background modes -->
     <key>UIBackgroundModes</key>
     <array>
@@ -93,7 +92,6 @@
     <string>com.sosbattery.app.locationUpdate</string>
     <string>com.sosbattery.app.backgroundSync</string>
     </array>
-    //End
 
     <!-- Notification -->
     <key>NSUserNotificationUsageDescription</key>
