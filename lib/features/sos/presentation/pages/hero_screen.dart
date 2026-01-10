@@ -6,8 +6,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async'; // cho Timer
+import 'package:shared_preferences/shared_preferences.dart'; // THÊM IMPORT NÀY
 import 'package:sos_battery/features/sos/presentation/pages/hero_screen_accepted.dart'; // Accepted screen
-import 'package:sos_battery/features/sos/presentation/pages/hero_profile_screen.dart'; // sửa import đúng
+import 'package:sos_battery/features/sos/presentation/pages/hero_profile_screen.dart'; // Profile
 
 class HeroScreen extends ConsumerStatefulWidget {
   const HeroScreen({super.key});
@@ -147,6 +148,12 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
     _mcoinTimer?.cancel();
   }
 
+  Future<void> _saveJobState(String sosId) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('active_job_id', sosId);
+    print('Saved active job ID: $sosId'); // debug
+  }
+
   void _acceptSOS(String sosId, String driverId) async {
     bool? confirm = await showDialog<bool>(
       context: context,
@@ -188,11 +195,9 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
           backgroundColor: Colors.green,
         ),
       );
-      // Lưu job ID để reopen app load lại
+
       // THÊM DÒNG NÀY: Lưu job ID để reopen app load lại
       await _saveJobState(sosId);
-      // final prefs = await SharedPreferences.getInstance();
-      // prefs.setString('active_job_id', sosId);
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -209,7 +214,6 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //
       appBar: AppBar(
         title: const Text('Hero Mode'),
         backgroundColor: Colors.green[800],
@@ -237,7 +241,6 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
           ),
         ],
       ),
-      //
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.green))
           : Column(
@@ -343,12 +346,4 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
             ),
     );
   }
-
-  //them vao day
-  Future<void> _saveJobState(String sosId) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('active_job_id', sosId);
-    print('Saved active job ID: $sosId'); // debug
-  }
-  //end ghi Job lai
 }

@@ -59,6 +59,8 @@
             android:exported="false"
             android:foregroundServiceType="location"
             tools:replace="android:exported,android:foregroundServiceType" />
+        <!-- # moi them vao  -->
+        <receiver android:name="io.flutter.plugins.flutterbackgroundservice.WatchdogReceiver" android:exported="false" />
 
     </application>
 

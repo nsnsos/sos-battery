@@ -3,9 +3,10 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' as latlng;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // thêm import
-import 'package:confetti/confetti.dart'; // add package confetti
-import 'dart:async'; // cho Timer
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:confetti/confetti.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // THÊM IMPORT NÀY
+import 'dart:async';
 import 'chat_screen.dart'; // chat realtime
 import 'package:sos_battery/features/sos/presentation/pages/hero_screen.dart'; // quay lại list SOS
 
@@ -13,8 +14,11 @@ class HeroScreenAccepted extends StatefulWidget {
   final String sosId;
   final String driverId;
 
-  const HeroScreenAccepted(
-      {super.key, required this.sosId, required this.driverId});
+  const HeroScreenAccepted({
+    super.key,
+    required this.sosId,
+    required this.driverId,
+  });
 
   @override
   State<HeroScreenAccepted> createState() => _HeroScreenAcceptedState();
@@ -69,78 +73,86 @@ class _HeroScreenAcceptedState extends State<HeroScreenAccepted> {
     });
   }
 
-  void _completeJob() {
-    // Bat dau tu day
-    _confettiController.play(); // bùng pháo hoa 3 giây
+  void _completeJob() async {
+    // Bùng pháo hoa
+    _confettiController.play();
 
-    FirebaseFirestore.instance
+    // Update status job thành completed
+    await FirebaseFirestore.instance
         .collection('sos_requests')
         .doc(widget.sosId)
         .update({
       'status': 'completed',
       'completedTime': FieldValue.serverTimestamp(),
     });
-    //tinh coint Hcoin
-// Tính Hcoin (1 phút helping = 1 Hcoin)
-    FirebaseFirestore.instance
+
+    // Tính và cộng Hcoin cho hero
+    final doc = await FirebaseFirestore.instance
         .collection('sos_requests')
         .doc(widget.sosId)
-        .get()
-        .then((doc) {
-      if (doc.exists) {
-        Timestamp acceptedTime = doc['acceptedTime'];
-        int durationSeconds =
-            DateTime.now().difference(acceptedTime.toDate()).inSeconds;
-        int hcoin = durationSeconds ~/ 60; // 1 phút = 1 Hcoin
+        .get();
 
-        String heroId = FirebaseAuth.instance.currentUser!.uid;
-        FirebaseFirestore.instance.collection('heroes').doc(heroId).update({
-          'hcoin': FieldValue.increment(hcoin),
-          'totalPoints': FieldValue.increment(hcoin),
-          'rescueTime': FieldValue.increment(durationSeconds),
-          'lastCompleteTime': FieldValue.serverTimestamp(),
-        });
-      }
-    });
-    //End coin HTime
+    if (doc.exists && doc.data()!.containsKey('acceptedTime')) {
+      Timestamp acceptedTime = doc['acceptedTime'];
+      int durationSeconds =
+          DateTime.now().difference(acceptedTime.toDate()).inSeconds;
+      int hcoin = durationSeconds ~/ 60; // 1 phút = 1 Hcoin
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return Stack(
-          children: [
-            AlertDialog(
-              title: const Text('Job Completed! 🎉'),
-              content: const Text('Thank you for helping!'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-            ConfettiWidget(
-              confettiController: _confettiController,
-              blastDirectionality: BlastDirectionality.explosive,
-              colors: const [Colors.red, Colors.white, Colors.blue],
-              numberOfParticles: 150, // siêu nhỏ, nổ nhẹ
-              maxBlastForce: 20,
-              minBlastForce: 5,
-              emissionFrequency: 0.05,
-              gravity: 0.1,
-            ),
-          ],
-        );
-      },
-    );
+      String heroId = FirebaseAuth.instance.currentUser!.uid;
 
-    // Quay lại HeroScreen chính (list SOS open)
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HeroScreen()),
-    );
+      await FirebaseFirestore.instance.collection('heroes').doc(heroId).update({
+        'hcoin': FieldValue.increment(hcoin),
+        'totalPoints': FieldValue.increment(hcoin),
+        'rescueTime': FieldValue.increment(durationSeconds),
+        'lastCompleteTime': FieldValue.serverTimestamp(),
+      });
+    }
+
+    // ===> THÊM PHẦN CLEAR ACTIVE_JOB_ID ĐỂ KHÔNG RESUME LẠI JOB CŨ <===
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('active_job_id');
+    print('Job completed - cleared active_job_id from prefs');
+
+    // Show dialog chúc mừng + pháo hoa
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return Stack(
+            children: [
+              AlertDialog(
+                title: const Text('Job Completed! 🎉'),
+                content: const Text('Thank you for helping! You earned Hcoin!'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Đóng dialog
+                      // Sau khi đóng dialog mới chuyển màn hình
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const HeroScreen()),
+                      );
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+              ConfettiWidget(
+                confettiController: _confettiController,
+                blastDirectionality: BlastDirectionality.explosive,
+                colors: const [Colors.red, Colors.white, Colors.blue],
+                numberOfParticles: 150,
+                maxBlastForce: 20,
+                minBlastForce: 5,
+                emissionFrequency: 0.05,
+                gravity: 0.1,
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
-  // Ket thuc completed Job
 
   @override
   void dispose() {
@@ -199,7 +211,7 @@ class _HeroScreenAcceptedState extends State<HeroScreenAccepted> {
           // MINI CHAT BUBBLE GÓC DƯỚI PHẢI
           Positioned(
             bottom: 100,
-            right: 20,
+            right: 30,
             child: GestureDetector(
               onTap: () {
                 Navigator.of(context).push(
@@ -235,10 +247,9 @@ class _HeroScreenAcceptedState extends State<HeroScreenAccepted> {
                   style: TextStyle(color: Colors.white, fontSize: 18)),
             ),
           ),
-          // them nut Fake report
-// NÚT REPORT FAKE (luôn hiện, góc phải trên, Hero report SOS fake)
+          // NÚT REPORT FAKE (luôn hiện, góc phải trên, Hero report SOS fake)
           Positioned(
-            top: 80,
+            top: 60,
             right: 20,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(

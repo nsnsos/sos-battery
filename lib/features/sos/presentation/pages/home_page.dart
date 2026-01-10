@@ -5,6 +5,8 @@ import 'package:latlong2/latlong.dart' as latlng;
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // <--- THÊM DÒNG NÀY
+
 import 'package:sos_battery/features/auth/presentation/pages/login_page.dart'; // để logout
 import 'package:sos_battery/features/sos/presentation/pages/hero_screen.dart'; // Become Hero
 import 'package:sos_battery/features/sos/presentation/pages/sos_request_sent_screen.dart'; // trang SOS Request Sent
@@ -17,8 +19,10 @@ class HomePage extends ConsumerStatefulWidget {
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> with SingleTickerProviderStateMixin {
-  latlng.LatLng _currentPosition = latlng.LatLng(32.7767, -96.7970); // Default Dallas
+class _HomePageState extends ConsumerState<HomePage>
+    with SingleTickerProviderStateMixin {
+  latlng.LatLng _currentPosition =
+      latlng.LatLng(32.7767, -96.7970); // Default Dallas
   bool _isLoadingLocation = true;
 
   late AnimationController _pulseController;
@@ -95,7 +99,10 @@ class _HomePageState extends ConsumerState<HomePage> with SingleTickerProviderSt
               children: [
                 const Text(
                   'Select Reason for SOS',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white),
                 ),
                 const SizedBox(height: 20),
                 _reasonTile('Dead Battery', Icons.battery_alert),
@@ -120,7 +127,8 @@ class _HomePageState extends ConsumerState<HomePage> with SingleTickerProviderSt
   ListTile _reasonTile(String title, IconData icon) {
     return ListTile(
       leading: Icon(icon, color: Colors.red, size: 30),
-      title: Text(title, style: const TextStyle(fontSize: 18, color: Colors.white)),
+      title: Text(title,
+          style: const TextStyle(fontSize: 18, color: Colors.white)),
       onTap: () => Navigator.pop(context, title),
       tileColor: Colors.grey[850],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -138,14 +146,16 @@ class _HomePageState extends ConsumerState<HomePage> with SingleTickerProviderSt
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Reason: $reason', style: const TextStyle(color: Colors.white)),
+              Text('Reason: $reason',
+                  style: const TextStyle(color: Colors.white)),
               const SizedBox(height: 10),
               Text(
                 'Location: ${_currentPosition.latitude.toStringAsFixed(6)}, ${_currentPosition.longitude.toStringAsFixed(6)}',
                 style: const TextStyle(color: Colors.white),
               ),
               const SizedBox(height: 10),
-              const Text('Rescue team will be notified.', style: TextStyle(color: Colors.white)),
+              const Text('Rescue team will be notified.',
+                  style: const TextStyle(color: Colors.white)),
             ],
           ),
           actions: [
@@ -156,7 +166,8 @@ class _HomePageState extends ConsumerState<HomePage> with SingleTickerProviderSt
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('SEND SOS', style: TextStyle(color: Colors.white)),
+              child:
+                  const Text('SEND SOS', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -164,24 +175,36 @@ class _HomePageState extends ConsumerState<HomePage> with SingleTickerProviderSt
     );
 
     if (confirm == true) {
-      DocumentReference ref = await FirebaseFirestore.instance.collection('sos_requests').add({
+      DocumentReference ref =
+          await FirebaseFirestore.instance.collection('sos_requests').add({
         'driverId': FirebaseAuth.instance.currentUser!.uid,
         'reason': reason,
-        'location': GeoPoint(_currentPosition.latitude, _currentPosition.longitude),
+        'location':
+            GeoPoint(_currentPosition.latitude, _currentPosition.longitude),
         'timestamp': FieldValue.serverTimestamp(),
         'status': 'open',
       });
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => SOSRequestSentScreen(
-            sosId: ref.id,
-            reason: reason,
-            time: DateTime.now(),
-            sosPosition: _currentPosition,
+      String sosId = ref.id;
+
+      // ===> LƯU ACTIVE_JOB_ID ĐỂ RESUME KHI MỞ LẠI APP <===
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('active_job_id', sosId);
+      print('Saved active_job_id: $sosId'); // Debug, sau này có thể xóa
+
+      // Chuyển sang màn hình theo dõi SOS
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => SOSRequestSentScreen(
+              sosId: sosId,
+              reason: reason,
+              time: DateTime.now(),
+              sosPosition: _currentPosition,
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 
@@ -267,7 +290,8 @@ class _HomePageState extends ConsumerState<HomePage> with SingleTickerProviderSt
               icon: const Icon(Icons.shield, color: Colors.white),
               label: const Text(
                 'Become Hero',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
               tooltip: 'Go online to help others',
             ),
@@ -328,7 +352,7 @@ class _HomePageState extends ConsumerState<HomePage> with SingleTickerProviderSt
               child: Card(
                 color: Colors.black87,
                 child: Padding(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   child: Text(
                     'Getting your location...',
                     textAlign: TextAlign.center,
