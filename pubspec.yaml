@@ -1,7 +1,7 @@
 name: sos_battery
 description: SOS-BATTERY - Real-time battery rescue across USA
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -59,4 +59,5 @@ flutter:
   #   - assets/animations/
   assets:
     - assets/icons/iconsos.png
-    - assets/icons/logososclear.png  # tên file logo mới của bro
+    - assets/icons/logososclear.png
+    - shorebird.yaml  # tên file logo mới của bro
