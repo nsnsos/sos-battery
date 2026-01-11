@@ -14,7 +14,7 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  print('Test Shorebird patch from CI!');
   print('Flutter main started');
 
   try {
