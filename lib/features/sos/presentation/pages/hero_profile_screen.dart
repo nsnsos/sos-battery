@@ -238,8 +238,6 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
                           style: TextStyle(color: Colors.white, fontSize: 18)),
                     ),
 
-                    // Hiển thị MCoin & HCoin (tinh gọn, góc trên)
-                    //them phan test o day
                     // Phần hiển thị MCoin & HCoin (tinh gọn, góc trên - thêm vào cuối Column)
                     const SizedBox(height: 40),
                     Container(
@@ -406,7 +404,77 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
                         ),
                       ],
                     ),
-                    // ket thuc phan test streambuilder
+                    // Lịch sử cứu hộ (thêm mới sau chi tiết stats)
+                    const SizedBox(height: 20),
+                    ExpansionTile(
+                      title: const Text('History',
+                          style: TextStyle(color: Colors.white)),
+                      children: [
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('sos_requests')
+                              .where('heroId',
+                                  isEqualTo:
+                                      FirebaseAuth.instance.currentUser!.uid)
+                              .where('status', isEqualTo: 'completed')
+                              .orderBy('completedTime', descending: true)
+                              .limit(10)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+                            if (snapshot.hasError) {
+                              return Text('Lỗi: ${snapshot.error}',
+                                  style: const TextStyle(color: Colors.red));
+                            }
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Text('Still not have history',
+                                    style: TextStyle(color: Colors.grey)),
+                              );
+                            }
+
+                            return ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: snapshot.data!.docs.length,
+                              itemBuilder: (context, index) {
+                                var doc = snapshot.data!.docs[index];
+                                var data = doc.data() as Map<String, dynamic>;
+                                Timestamp? completedTime =
+                                    data['completedTime'];
+                                String date = completedTime != null
+                                    ? completedTime
+                                        .toDate()
+                                        .toString()
+                                        .substring(0, 10)
+                                    : 'Unknown';
+                                return ListTile(
+                                  leading: const Icon(Icons.check_circle,
+                                      color: Colors.green),
+                                  title: Text('Job ID: ${doc.id}',
+                                      style:
+                                          const TextStyle(color: Colors.white)),
+                                  subtitle: Text('Completed: $date',
+                                      style:
+                                          const TextStyle(color: Colors.grey)),
+                                  onTap: () {
+                                    // Optional: Mở chi tiết job (bro có thể thêm sau)
+                                    print('Open job detail: ${doc.id}');
+                                  },
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    // End nut history cua Hero
                   ],
                 ),
               ),

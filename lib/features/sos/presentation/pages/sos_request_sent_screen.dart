@@ -111,8 +111,7 @@ class _SOSRequestSentScreenState extends State<SOSRequestSentScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Tip the Hero?'),
-          content:
-              const Text('Hero đã giúp bạn, bạn có muốn tip để cảm ơn không?'),
+          content: const Text('Hero helped you, Tip for Hero happy ?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),

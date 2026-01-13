@@ -236,17 +236,51 @@ class _HeroScreenAcceptedState extends State<HeroScreenAccepted> {
           ),
 
           // NÚT COMPLETE JOB
+          // NÚT COMPLETE JOB + BACK TO HOME
           Positioned(
-            bottom: 20,
+            bottom: 30,
             left: 20,
             right: 20,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              onPressed: _completeJob,
-              child: const Text('Complete Job',
-                  style: TextStyle(color: Colors.white, fontSize: 18)),
+            child: Column(
+              children: [
+                // Nút Complete Job (giữ nguyên của bro)
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    minimumSize: const Size(double.infinity, 55),
+                  ),
+                  onPressed: _completeJob,
+                  child: const Text('Complete Job',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 16),
+
+                // Nút Back to Home (thêm mới, luôn hiện sau complete, màu xám để phân biệt)
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[700],
+                    minimumSize: const Size(double.infinity, 55),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                          builder: (_) =>
+                              const HeroScreen()), // Quay về Hero Mode (list SOS open)
+                    );
+                  },
+                  child: const Text('Back to Hero Mode',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
+                ),
+              ],
             ),
           ),
+
           // NÚT REPORT FAKE (luôn hiện, góc phải trên, Hero report SOS fake)
           Positioned(
             top: 60,
