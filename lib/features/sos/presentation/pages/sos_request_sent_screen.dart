@@ -225,6 +225,34 @@ class _SOSRequestSentScreenState extends State<SOSRequestSentScreen> {
               ),
             ),
           ),
+          // Nut goi xe keo gan day
+          // NÚT TÌM XE KÉO GẦN (hiện khi job open/accepted)
+          if (_status == 'open' || _status == 'accepted')
+            Positioned(
+              bottom: 150,
+              left: 20,
+              right: 20,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                onPressed: () async {
+                  // Link Google Maps tìm "tow truck near me"
+                  final Uri url = Uri.parse(
+                      'https://www.google.com/maps/search/tow+truck+near+me');
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Không mở được Maps'),
+                          backgroundColor: Colors.red),
+                    );
+                  }
+                },
+                child: const Text('Gọi xe kéo gần đây',
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          // End nut goi xe
 
           // CARD TRẠNG THÁI & NÚT
           Positioned(
