@@ -230,7 +230,7 @@ class _SOSRequestSentScreenState extends State<SOSRequestSentScreen> {
           if (_status == 'open' || _status == 'accepted')
             Positioned(
               bottom: 150,
-              left: 20,
+              // left: 20,
               right: 20,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
