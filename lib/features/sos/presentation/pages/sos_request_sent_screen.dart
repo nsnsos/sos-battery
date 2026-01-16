@@ -248,7 +248,7 @@ class _SOSRequestSentScreenState extends State<SOSRequestSentScreen> {
                     );
                   }
                 },
-                child: const Text('Gọi xe kéo gần đây',
+                child: const Text('Call Tow Service near me',
                     style: TextStyle(color: Colors.white)),
               ),
             ),
