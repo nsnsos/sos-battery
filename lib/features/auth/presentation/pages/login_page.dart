@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:sos_battery/features/sos/presentation/pages/home_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -150,6 +151,43 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       });
     }
   }
+
+  // them cau thong bao o day.
+  Future<void> _showLegalDisclaimer() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeen = prefs.getBool('has_seen_disclaimer') ?? false;
+
+    if (hasSeen) return; // Chỉ show 1 lần
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false, // Không cho đóng bằng bấm ngoài
+      builder: (context) => AlertDialog(
+        title: const Text('Important Legal Notice'),
+        content: const Text(
+          'SOS Battery is a voluntary roadside assistance app and does not replace emergency services.\n\n'
+          'This application is NOT a substitute for dialing 911 or any local emergency number.\n\n'
+          'In any situation involving immediate danger to life, serious injury, fire, medical emergency, or public safety threat, call 911 immediately.\n\n'
+          'SOS Battery does not guarantee response time, availability of Heroes, or the outcome of any assistance request.',
+          style: TextStyle(fontSize: 16, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await prefs.setBool('has_seen_disclaimer', true);
+              Navigator.pop(context);
+            },
+            child: const Text('I Understand',
+                style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+        backgroundColor: Colors.black87,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 10,
+      ),
+    );
+  }
+  // End cau thong bao.
 
   @override
   void dispose() {
