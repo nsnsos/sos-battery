@@ -23,10 +23,10 @@ android {
     // 2. Cấu hình signingConfigs PHẢI nằm trước buildTypes
     signingConfigs {
         create("release") {
-        storeFile = file("upload-keystore.jks")  // tên file keystore
-        storePassword = "123456"  // password keystore
-        keyAlias = "upload"  // alias bro nhập khi tạo
-        keyPassword = "123456"  // password key (thường giống storePassword)
+            storeFile = file("upload-keystore.jks")  // tên file keystore (đảm bảo file này tồn tại trong thư mục android/app/)
+            storePassword = "123456"  // password keystore (thay bằng password thật của bro)
+            keyAlias = "upload"  // alias bro nhập khi tạo keystore
+            keyPassword = "123456"  // password key (thường giống storePassword)
         }
     }
 
@@ -43,18 +43,18 @@ android {
     defaultConfig {
         applicationId = "com.sosbattery.app"
         minSdk = flutter.minSdkVersion
-        targetSdk = 35
+        targetSdk = 35  // Đúng, pass Play Store
         versionCode = flutter.versionCode.toInt()
         versionName = flutter.versionName
         multiDexEnabled = true
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            }
+        }
     }
 }
 
