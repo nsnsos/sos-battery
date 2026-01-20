@@ -45,6 +45,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
+        await _showLegalDisclaimer();
       }
 
       if (mounted) {
@@ -81,7 +82,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
-
+      await _showLegalDisclaimer();
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const HomePage()),
@@ -103,6 +104,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       phoneNumber: _phoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) async {
         await FirebaseAuth.instance.signInWithCredential(credential);
+        await _showLegalDisclaimer();
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const HomePage()),
