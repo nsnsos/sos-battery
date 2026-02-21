@@ -25,10 +25,10 @@
     <string>APPL</string>
 
     <key>CFBundleShortVersionString</key>
-    <string>1.0.21</string>
+    <string>1.0.22</string>
 
     <key>CFBundleVersion</key>
-    <string>21</string>
+    <string>22</string>
 
     <key>LSRequiresIPhoneOS</key>
     <true/>
@@ -61,43 +61,36 @@
         <true/>
     </dict>
 
-    <!-- Camera -->
+    <!-- Permissions -->
     <key>NSCameraUsageDescription</key>
-    <string>Ứng dụng cần camera để hỗ trợ gửi thông tin SOS.</string>
+    <string>Ứng dụng cần camera để hỗ trợ gửi thông tin SOS (ảnh, video).</string>
 
-    <!-- Photo -->
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>Ứng dụng cần truy cập thư viện ảnh để gửi thông tin SOS.</string>
+    <string>Ứng dụng cần truy cập thư viện ảnh để chọn và gửi hình ảnh/video SOS.</string>
 
-    <!-- Location -->
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>SOS Battery cần vị trí của bạn để gửi yêu cầu cứu hộ.</string>
+    <string>SOS Battery cần vị trí của bạn để gửi yêu cầu cứu hộ khi bạn đang sử dụng ứng dụng.</string>
 
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>SOS Battery cần vị trí của bạn để theo dõi và hỗ trợ cứu hộ liên tục.</string>
+    <string>SOS Battery cần truy cập vị trí liên tục (kể cả khi ứng dụng ở nền) để theo dõi và gửi yêu cầu cứu hộ khẩn cấp kịp thời.</string>
 
-    <!-- Background modes (bắt buộc cho SOS / foreground task) -->
-    <!-- Background modes -->
+    <!-- Background Modes - rất quan trọng cho SOS -->
     <key>UIBackgroundModes</key>
     <array>
-    <string>processing</string>
-    <string>fetch</string>
-    <string>remote-notification</string>
-    <string>location</string>
+        <string>location</string>           <!-- Bắt buộc cho background location tracking -->
+        <string>remote-notification</string> <!-- Để nhận push từ server nếu cần -->
+        <string>fetch</string>              <!-- Nếu có background fetch định kỳ -->
+        <string>processing</string>         <!-- Nếu dùng BGProcessingTask cho công việc nặng -->
     </array>
 
-    <!-- Permitted identifiers for processing tasks -->
+    <!-- Background Tasks identifiers -->
     <key>BGTaskSchedulerPermittedIdentifiers</key>
     <array>
-    <string>com.sosbattery.app.locationUpdate</string>
-    <string>com.sosbattery.app.backgroundSync</string>
+        <string>com.sosbattery.app.locationUpdate</string>
+        <string>com.sosbattery.app.backgroundSync</string>
     </array>
 
-    <!-- Notification -->
-    <key>NSUserNotificationUsageDescription</key>
-    <string>Ứng dụng cần gửi thông báo để cảnh báo và cập nhật tình trạng SOS.</string>
-
-    <!-- Google Sign-In (đổi xxxxxx thành ID thật của bạn) -->
+    <!-- Google Sign-In (thay bằng giá trị thật của bạn) -->
     <key>CFBundleURLTypes</key>
     <array>
         <dict>
@@ -105,24 +98,20 @@
             <string>Editor</string>
             <key>CFBundleURLSchemes</key>
             <array>
-            <string>com.googleusercontent.apps.1-183082399206-ios-fe7a5ccd344c46549c9227</string>  
+                <string>com.googleusercontent.apps.1-183082399206-ios-fe7a5ccd344c46549c9227</string>
             </array>
         </dict>
     </array>
-    
-    <!-- Encryption -->
+
+    <!-- Khác -->
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
 
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
 
-    <key>UIBackgroundModes</key>
-    <array>
-    <string>fetch</string>
-    <string>remote-notification</string>
-    <string>processing</string>
-    <string>location</string>
-    </array>
+    <!-- REVERSED_CLIENT_ID (dùng cho Google Sign-In nếu cần) -->
+    <!-- REVERSED_CLIENT_ID   866840305174-ru9osmjche22n446ni2t6nslbo8mlurc.apps.googleusercontent.com -->
+
 </dict>
 </plist>
