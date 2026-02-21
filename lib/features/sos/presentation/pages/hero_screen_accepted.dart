@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:confetti/confetti.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // THÊM IMPORT NÀY
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'chat_screen.dart'; // chat realtime
 import 'package:sos_battery/features/sos/presentation/pages/hero_screen.dart'; // quay lại list SOS
@@ -24,11 +24,16 @@ class HeroScreenAccepted extends StatefulWidget {
   State<HeroScreenAccepted> createState() => _HeroScreenAcceptedState();
 }
 
-class _HeroScreenAcceptedState extends State<HeroScreenAccepted> {
+class _HeroScreenAcceptedState extends State<HeroScreenAccepted>
+    with TickerProviderStateMixin {
   latlng.LatLng _heroPosition =
       latlng.LatLng(32.7767, -96.7970); // Vị trí Hero realtime
   GeoPoint _sosLocation = GeoPoint(32.7357, -97.1081); // Default SOS location
   late ConfettiController _confettiController;
+  late AnimationController _animationController;
+
+  bool _isLoadingComplete = false;
+  bool _isLoadingReport = false;
 
   @override
   void initState() {
@@ -37,6 +42,11 @@ class _HeroScreenAcceptedState extends State<HeroScreenAccepted> {
         ConfettiController(duration: const Duration(seconds: 3));
     _loadSOSData();
     _startLocationUpdates();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
   }
 
   Future<void> _loadSOSData() async {
@@ -58,7 +68,6 @@ class _HeroScreenAcceptedState extends State<HeroScreenAccepted> {
   }
 
   void _startLocationUpdates() {
-    // Update vị trí Hero realtime (mỗi 10s)
     Timer.periodic(const Duration(seconds: 10), (timer) async {
       try {
         Position position = await Geolocator.getCurrentPosition(
@@ -74,89 +83,173 @@ class _HeroScreenAcceptedState extends State<HeroScreenAccepted> {
   }
 
   void _completeJob() async {
-    // Bùng pháo hoa
-    _confettiController.play();
+    print('Complete Job button tapped!');
+    print('Hero UID: ${FirebaseAuth.instance.currentUser?.uid ?? "NULL"}');
+    setState(() => _isLoadingComplete = true);
 
-    // Update status job thành completed
-    await FirebaseFirestore.instance
-        .collection('sos_requests')
-        .doc(widget.sosId)
-        .update({
-      'status': 'completed',
-      'completedTime': FieldValue.serverTimestamp(),
-    });
+    try {
+      _confettiController.play();
 
-    // Tính và cộng Hcoin cho hero
-    final doc = await FirebaseFirestore.instance
-        .collection('sos_requests')
-        .doc(widget.sosId)
-        .get();
-
-    if (doc.exists && doc.data()!.containsKey('acceptedTime')) {
-      Timestamp acceptedTime = doc['acceptedTime'];
-      int durationSeconds =
-          DateTime.now().difference(acceptedTime.toDate()).inSeconds;
-      int hcoin = durationSeconds ~/ 60; // 1 phút = 1 Hcoin
-
-      String heroId = FirebaseAuth.instance.currentUser!.uid;
-
-      await FirebaseFirestore.instance.collection('heroes').doc(heroId).update({
-        'hcoin': FieldValue.increment(hcoin),
-        'totalPoints': FieldValue.increment(hcoin),
-        'rescueTime': FieldValue.increment(durationSeconds),
-        'lastCompleteTime': FieldValue.serverTimestamp(),
+      await FirebaseFirestore.instance
+          .collection('sos_requests')
+          .doc(widget.sosId)
+          .update({
+        'status': 'completed',
+        'completedTime': FieldValue.serverTimestamp(),
       });
+
+      final doc = await FirebaseFirestore.instance
+          .collection('sos_requests')
+          .doc(widget.sosId)
+          .get();
+
+      if (doc.exists && doc.data()!.containsKey('acceptedTime')) {
+        Timestamp acceptedTime = doc['acceptedTime'];
+        int durationSeconds =
+            DateTime.now().difference(acceptedTime.toDate()).inSeconds;
+        int hcoin = durationSeconds ~/ 60;
+
+        String heroId = FirebaseAuth.instance.currentUser!.uid;
+
+        await FirebaseFirestore.instance
+            .collection('heroes')
+            .doc(heroId)
+            .update({
+          'hcoin': FieldValue.increment(hcoin),
+          'totalPoints': FieldValue.increment(hcoin),
+          'rescueTime': FieldValue.increment(durationSeconds),
+          'lastCompleteTime': FieldValue.serverTimestamp(),
+        });
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('active_job_id');
+      print('Job completed - cleared active_job_id from prefs');
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return Stack(
+              children: [
+                AlertDialog(
+                  title: const Text('Job Completed! 🎉'),
+                  content:
+                      const Text('Thank you for helping! You earned Hcoin!'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        print(
+                            'Navigating back to HeroScreen... Current route count: ${Navigator.of(context).canPop()}');
+                        //
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const HeroScreen()),
+                          (route) => route
+                              .isFirst, // Giữ lại route đầu tiên (màn hình chính), xóa hết ở giữa
+                        );
+                        //
+                        //Navigator.of(context).pushReplacement(
+                        //  MaterialPageRoute(builder: (_) => const HeroScreen()),
+                        //);
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+                ConfettiWidget(
+                  confettiController: _confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  colors: const [Colors.red, Colors.white, Colors.blue],
+                  numberOfParticles: 150,
+                  maxBlastForce: 20,
+                  minBlastForce: 5,
+                  emissionFrequency: 0.05,
+                  gravity: 0.1,
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (e) {
+      print('Complete Job error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Lỗi complete job: $e'),
+              backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingComplete = false);
+      }
     }
+  }
 
-    // ===> THÊM PHẦN CLEAR ACTIVE_JOB_ID ĐỂ KHÔNG RESUME LẠI JOB CŨ <===
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('active_job_id');
-    print('Job completed - cleared active_job_id from prefs');
+  Future<void> _reportFake() async {
+    print('Report Fake button tapped!');
+    print('Hero UID: ${FirebaseAuth.instance.currentUser?.uid ?? "NULL"}');
+    setState(() => _isLoadingReport = true);
 
-    // Show dialog chúc mừng + pháo hoa
-    if (mounted) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return Stack(
-            children: [
-              AlertDialog(
-                title: const Text('Job Completed! 🎉'),
-                content: const Text('Thank you for helping! You earned Hcoin!'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context); // Đóng dialog
-                      // Sau khi đóng dialog mới chuyển màn hình
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => const HeroScreen()),
-                      );
-                    },
-                    child: const Text('OK'),
-                  ),
-                ],
-              ),
-              ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                colors: const [Colors.red, Colors.white, Colors.blue],
-                numberOfParticles: 150,
-                maxBlastForce: 20,
-                minBlastForce: 5,
-                emissionFrequency: 0.05,
-                gravity: 0.1,
-              ),
-            ],
-          );
-        },
-      );
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('No user logged in');
+      }
+
+      await FirebaseFirestore.instance
+          .collection('sos_requests')
+          .doc(widget.sosId)
+          .update({
+        'reported': true,
+        'reportReason': 'Fake SOS / Driver',
+        'reportTime': FieldValue.serverTimestamp(),
+        'reportedBy': user.uid,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Report sent to admin. Thank you!'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        print(
+            'Navigating back to HeroScreen... Current route count: ${Navigator.of(context).canPop()}');
+//
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HeroScreen()),
+          (route) => route
+              .isFirst, // Giữ lại route đầu tiên (màn hình chính), xóa hết ở giữa
+        );
+//
+        // Navigator.of(context).pushReplacement(
+        //   MaterialPageRoute(builder: (_) => const HeroScreen()),
+        // );
+      }
+    } catch (e) {
+      print('Report Fake error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Lỗi report fake: $e'),
+              backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingReport = false);
+      }
     }
   }
 
   @override
   void dispose() {
     _confettiController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -166,10 +259,10 @@ class _HeroScreenAcceptedState extends State<HeroScreenAccepted> {
       appBar: AppBar(
         title: const Text('Hero Mode - Active Job'),
         backgroundColor: Colors.green[800],
+        elevation: 0,
       ),
       body: Stack(
         children: [
-          // MAP NAVIGATION
           FlutterMap(
             options: MapOptions(
               initialCenter: _heroPosition,
@@ -208,117 +301,196 @@ class _HeroScreenAcceptedState extends State<HeroScreenAccepted> {
             ],
           ),
 
-          // MINI CHAT BUBBLE GÓC DƯỚI PHẢI
+          // MINI CHAT BUBBLE
           Positioned(
-            bottom: 100,
-            right: 30,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ChatScreen(
-                        sosId: widget.sosId, driverId: widget.driverId),
-                  ),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.green[700],
-                  shape: BoxShape.circle,
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black54, blurRadius: 10)
+            bottom: 140 + MediaQuery.of(context).padding.bottom,
+            right: 24,
+            child: SafeArea(
+              bottom: true, // Chỉ safe bottom để tránh che home indicator
+              child: GestureDetector(
+                onTap: () {
+                  print('Chat bubble tapped!');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ChatScreen(
+                        sosId: widget.sosId,
+                        driverId: widget.driverId,
+                      ),
+                    ),
+                  );
+                },
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('sos_requests')
+                          .doc(widget.sosId)
+                          .collection('messages')
+                          .where('read', isEqualTo: false)
+                          .where('receiverId',
+                              isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        int unreadCount =
+                            snapshot.hasData ? snapshot.data!.docs.length : 0;
+                        if (unreadCount == 0) return const SizedBox.shrink();
+
+                        return Positioned(
+                          top: -8,
+                          right: -8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.red.withOpacity(0.5),
+                                    blurRadius: 8),
+                              ],
+                            ),
+                            child: Text(
+                              unreadCount > 9 ? '9+' : '$unreadCount',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: 1.0 + 0.08 * _animationController.value,
+                          child: child,
+                        );
+                      },
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: Colors.green[700],
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.green.withOpacity(0.6),
+                              blurRadius: 15,
+                              spreadRadius: 5,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.chat,
+                          color: Colors.white,
+                          size: 35,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                child: const Icon(Icons.chat, color: Colors.white, size: 30),
               ),
             ),
           ),
 
-          // NÚT COMPLETE JOB
-          // NÚT COMPLETE JOB + BACK TO HOME
+          // BOTTOM BUTTONS
           Positioned(
             bottom: 30,
             left: 20,
             right: 20,
             child: Column(
               children: [
-                // Nút Complete Job (giữ nguyên của bro)
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
-                    minimumSize: const Size(double.infinity, 55),
+                    minimumSize: const Size.fromHeight(56),
                   ),
-                  onPressed: _completeJob,
-                  child: const Text('Complete Job',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold)),
+                  onPressed: _isLoadingComplete ? null : _completeJob,
+                  child: _isLoadingComplete
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Complete Job',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 16),
-
-                // Nút Back to Home (thêm mới, luôn hiện sau complete, màu xám để phân biệt)
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey[700],
-                    minimumSize: const Size(double.infinity, 55),
+                    minimumSize: const Size.fromHeight(56),
                   ),
                   onPressed: () {
                     Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                          builder: (_) =>
-                              const HeroScreen()), // Quay về Hero Mode (list SOS open)
+                      MaterialPageRoute(builder: (_) => const HeroScreen()),
                     );
                   },
-                  child: const Text('Back to Hero Mode',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Back to Hero Mode',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
 
-          // NÚT REPORT FAKE (luôn hiện, góc phải trên, Hero report SOS fake)
+          // REPORT FAKE BUTTON
           Positioned(
-            top: 60,
-            right: 20,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            top: 16,
+            right: 16,
+            child: SafeArea(
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _isLoadingReport ? null : _reportFake,
+                  borderRadius: BorderRadius.circular(30),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.orange.withOpacity(0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: _isLoadingReport
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const Text(
+                            'Report Fake',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
               ),
-              onPressed: () async {
-                await FirebaseFirestore.instance
-                    .collection('sos_requests')
-                    .doc(widget.sosId)
-                    .update({
-                  'reported': true,
-                  'reportReason': 'Fake SOS / Driver',
-                  'reportTime': FieldValue.serverTimestamp(),
-                  'reportedBy':
-                      FirebaseAuth.instance.currentUser!.uid, // Hero report
-                });
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Report sent to admin. Thank you!'),
-                      backgroundColor: Colors.orange),
-                );
-
-                // Tự động quay về HeroScreen (list SOS open)
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const HeroScreen()),
-                );
-              },
-              child: const Text('Report Fake',
-                  style: TextStyle(color: Colors.white, fontSize: 14)),
             ),
           ),
-          //End nut Fake Report
         ],
       ),
     );
