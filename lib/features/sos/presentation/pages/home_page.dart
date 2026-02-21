@@ -135,6 +135,7 @@ class _HomePageState extends ConsumerState<HomePage>
     );
   }
 
+// Start here
   Future<void> _confirmAndSendSOS(String reason) async {
     final bool? confirm = await showDialog<bool>(
       context: context,
@@ -174,10 +175,24 @@ class _HomePageState extends ConsumerState<HomePage>
       },
     );
 
-    if (confirm == true) {
+    if (confirm != true) return; // Nếu cancel thì thoát luôn
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated. Please login again.');
+      }
+
       DocumentReference ref =
           await FirebaseFirestore.instance.collection('sos_requests').add({
-        'driverId': FirebaseAuth.instance.currentUser!.uid,
+        'driverId': user.uid,
         'reason': reason,
         'location':
             GeoPoint(_currentPosition.latitude, _currentPosition.longitude),
@@ -187,13 +202,15 @@ class _HomePageState extends ConsumerState<HomePage>
 
       String sosId = ref.id;
 
-      // ===> LƯU ACTIVE_JOB_ID ĐỂ RESUME KHI MỞ LẠI APP <===
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('active_job_id', sosId);
-      print('Saved active_job_id: $sosId'); // Debug, sau này có thể xóa
+      print('SOS sent successfully! ID: $sosId');
 
-      // Chuyển sang màn hình theo dõi SOS
-      if (mounted) {
+      // Đóng loading
+      if (context.mounted) Navigator.of(context).pop();
+
+      // Navigate sang màn hình theo dõi
+      if (context.mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => SOSRequestSentScreen(
@@ -205,9 +222,26 @@ class _HomePageState extends ConsumerState<HomePage>
           ),
         );
       }
+    } catch (e) {
+      print('Error sending SOS: $e');
+
+      // Đóng loading nếu đang mở
+      if (context.mounted) Navigator.of(context).pop();
+
+      // Show lỗi cho user
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Không thể gửi SOS: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
     }
   }
 
+// End
   @override
   void dispose() {
     _pulseController.dispose();
