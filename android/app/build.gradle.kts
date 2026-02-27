@@ -10,7 +10,7 @@ if (keystorePropertiesFile.exists()) {
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
+    // XÓA: id("kotlin-android")  <-- Không cần nữa với AGP 9.0+
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
 }
@@ -23,10 +23,10 @@ android {
     // 2. Cấu hình signingConfigs PHẢI nằm trước buildTypes
     signingConfigs {
         create("release") {
-            storeFile = file("upload-keystore.jks")  // tên file keystore (đảm bảo file này tồn tại trong thư mục android/app/)
-            storePassword = "123456"  // password keystore (thay bằng password thật của bro)
-            keyAlias = "upload"  // alias bro nhập khi tạo keystore
-            keyPassword = "123456"  // password key (thường giống storePassword)
+            storeFile = file("upload-keystore.jks") // tên file keystore (đảm bảo file này tồn tại trong thư mục android/app/)
+            storePassword = "123456" // password keystore (thay bằng password thật của bro)
+            keyAlias = "upload" // alias bro nhập khi tạo keystore
+            keyPassword = "123456" // password key (thường giống storePassword)
         }
     }
 
@@ -36,14 +36,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
+    // XÓA block này vì built-in Kotlin xử lý jvmTarget
+    // kotlinOptions {
+    //     jvmTarget = JavaVersion.VERSION_17.toString()
+    // }
 
     defaultConfig {
         applicationId = "com.sosbattery.app"
         minSdk = flutter.minSdkVersion
-        targetSdk = 35  // Đúng, pass Play Store
+        targetSdk = 35 // Đúng, pass Play Store
         versionCode = flutter.versionCode.toInt()
         versionName = flutter.versionName
         multiDexEnabled = true
