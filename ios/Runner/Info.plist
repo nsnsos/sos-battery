@@ -25,10 +25,10 @@
     <string>APPL</string>
 
     <key>CFBundleShortVersionString</key>
-    <string>1.0.23</string>
+    <string>1.0.24</string>
 
     <key>CFBundleVersion</key>
-    <string>23</string>
+    <string>24</string>
 
     <key>LSRequiresIPhoneOS</key>
     <true/>
@@ -90,28 +90,28 @@
         <string>com.sosbattery.app.backgroundSync</string>
     </array>
 
-    <!-- Google Sign-In (thay bằng giá trị thật của bạn) -->
-    <key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleTypeRole</key>
-            <string>Editor</string>
-            <key>CFBundleURLSchemes</key>
-            <array>
-                <string>com.googleusercontent.apps.1-183082399206-ios-fe7a5ccd344c46549c9227</string>
-            </array>
-        </dict>
-    </array>
+    <!-- Google Sign-In URL scheme (chỉ dùng một giá trị REVERSED_CLIENT_ID đúng) -->
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <!-- DÙNG GIÁ TRỊ CHÍNH XÁC TỪ GoogleService-Info.plist (REVERSED_CLIENT_ID) -->
+            <string>com.googleusercontent.apps.183082399206-t5v5sfb87aoh7peab4s0flhjnms6cchb</string>
+            <!-- Nếu bro có giá trị khác từ Firebase, thay bằng cái đúng, KHÔNG add cả hai -->
+        </array>
+    </dict>
+    <!-- Nếu có URL scheme khác (ví dụ deep link, universal link), add dict mới ở đây -->
+</array>
 
-    <!-- Khác -->
-    <key>ITSAppUsesNonExemptEncryption</key>
-    <false/>
+<!-- Các key khác giữ nguyên -->
+<key>ITSAppUsesNonExemptEncryption</key>
+<false/>
 
-    <key>UIApplicationSupportsIndirectInputEvents</key>
-    <true/>
-
-    <!-- REVERSED_CLIENT_ID (dùng cho Google Sign-In nếu cần) -->
-    <!-- REVERSED_CLIENT_ID   866840305174-ru9osmjche22n446ni2t6nslbo8mlurc.apps.googleusercontent.com -->
+<key>UIApplicationSupportsIndirectInputEvents</key>
+<true/>
 
     <key>io.flutter.embedding.android.EnableImpeller</key>
     <false/>
