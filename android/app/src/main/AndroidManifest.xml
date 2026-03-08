@@ -17,11 +17,16 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
     <application
-        android:label="sos_battery"
+        android:label="sosbattery"
         android:name="${applicationName}"
         android:icon="@mipmap/iconsos"
         android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true"> <!-- Cho phép HTTP/HTTPS tải map nếu cần -->
+
+        <!-- Disable Impeller renderer (để fix black screen / crash launch trên một số device) -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
 
         <!-- API KEY GOOGLE MAPS (nếu dùng Google Maps SDK, flutter_map/OSM không cần nhưng giữ lại) -->
         <meta-data
@@ -59,8 +64,11 @@
             android:exported="false"
             android:foregroundServiceType="location"
             tools:replace="android:exported,android:foregroundServiceType" />
-        <!-- # moi them vao  -->
-        <receiver android:name="io.flutter.plugins.flutterbackgroundservice.WatchdogReceiver" android:exported="false" />
+
+        <!-- # moi them vao -->
+        <receiver
+            android:name="io.flutter.plugins.flutterbackgroundservice.WatchdogReceiver"
+            android:exported="false" />
 
     </application>
 

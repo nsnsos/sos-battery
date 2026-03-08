@@ -10,7 +10,7 @@ if (keystorePropertiesFile.exists()) {
 
 plugins {
     id("com.android.application")
-    // XÓA: id("kotlin-android")  <-- Không cần nữa với AGP 9.0+
+    id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
 }
@@ -37,14 +37,14 @@ android {
     }
 
     // XÓA block này vì built-in Kotlin xử lý jvmTarget
-    // kotlinOptions {
-    //     jvmTarget = JavaVersion.VERSION_17.toString()
-    // }
+    kotlin {
+        jvmToolchain(17)  // Đây là cách chuẩn mới, Gradle tự align JVM target
+        }
 
     defaultConfig {
         applicationId = "com.sosbattery.app"
         minSdk = flutter.minSdkVersion
-        targetSdk = 35 // Đúng, pass Play Store
+        targetSdk = 36 // Đúng, pass Play Store
         versionCode = flutter.versionCode.toInt()
         versionName = flutter.versionName
         multiDexEnabled = true
@@ -52,10 +52,18 @@ android {
 
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-        }
+        // Tạm tắt để test crash (sau fix thì bật lại true)
+        isMinifyEnabled = false          // thay vì minifyEnabled
+        isShrinkResources = false       // thay vì shrinkResources
+        signingConfig = signingConfigs.getByName("release")
+
+        // Giữ nguyên ProGuard file (dù tắt minify vẫn ok, không ảnh hưởng)
+        proguardFiles(
+            getDefaultProguardFile("proguard-android-optimize.txt"),
+            "proguard-rules.pro"
+        )
+    }
+        
     }
 }
 
@@ -64,5 +72,5 @@ flutter {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

@@ -67,12 +67,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
       if (googleUser == null) {
         setState(() => _isLoading = false);
         return;
       }
 
+      // THÊM await Ở ĐÂY: googleUser.authentication trả về Future
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
@@ -82,20 +85,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
-      await _showLegalDisclaimer();
+
       if (mounted) {
+        await _showLegalDisclaimer(); // Di chuyển disclaimer vào sau khi login thành công
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const HomePage()),
         );
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Google Sign-In failed';
+        _errorMessage = 'Google Sign-In failed: $e';
         _isLoading = false;
       });
     }
   }
 
+  //
   // Phone Auth
   Future<void> _verifyPhoneNumber() async {
     setState(() => _isLoading = true);
