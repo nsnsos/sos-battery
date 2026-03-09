@@ -113,7 +113,14 @@
 <key>UIApplicationSupportsIndirectInputEvents</key>
 <true/>
 
-    <key>io.flutter.embedding.android.EnableImpeller</key>
-    <false/>
+<key>io.flutter.embedding.android.EnableImpeller</key>
+<false/>
+
+<key>FLTEnableImpeller</key>
+<false/>
+
+<key>io.flutter.embedding.ios.EnableImpeller</key>
+<false/>
+
 </dict>
 </plist>
