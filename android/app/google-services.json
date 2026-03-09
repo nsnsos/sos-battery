@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "183082399206-91sggpe0i81ddtpsigq9uoajm61imcl8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sosbattery.app",
+            "certificate_hash": "c4c04cff4a1f68ba1b3bc4390ee9d1907581b270"
+          }
+        },
+        {
           "client_id": "183082399206-j0m2mlig5gb8ue0h63t17maf59kmkg5p.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

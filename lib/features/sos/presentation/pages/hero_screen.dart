@@ -221,7 +221,7 @@ class _HeroScreenState extends ConsumerState<HeroScreen> {
           Switch(
             value: _isOnline,
             onChanged: (_) => _toggleOnline(),
-            activeColor: Colors.white,
+            activeThumbColor: Colors.white,
             activeTrackColor: Colors.green,
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: Colors.grey,

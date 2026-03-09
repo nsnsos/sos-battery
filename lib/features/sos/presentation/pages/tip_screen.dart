@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class TipScreen extends StatefulWidget {
   final String heroId; // UID Hero để lấy profile từ Firestore
@@ -18,15 +17,41 @@ class _TipScreenState extends State<TipScreen> {
   String _cashAppUsername = '';
   String _applePayEmail = '';
   String _zelleEmail = '';
-  final TextEditingController _amountController = TextEditingController(text: '10');
-  final TextEditingController _noteController = TextEditingController(text: 'Thanks for the rescue!');
+  final TextEditingController _amountController =
+      TextEditingController(text: '10');
+  final TextEditingController _noteController =
+      TextEditingController(text: 'Thanks for the rescue!');
 
   // Danh sách phương thức tip (icon + tên + field)
   final List<Map<String, dynamic>> _paymentOptions = [
-    {'name': 'Venmo', 'icon': Icons.payment, 'color': Colors.blue, 'field': 'venmoUsername', 'linkPrefix': 'https://venmo.com/'},
-    {'name': 'Zelle', 'icon': Icons.send, 'color': Colors.purple, 'field': 'zelleEmail', 'linkPrefix': 'https://zellepay.com/'},
-    {'name': 'Apple Pay', 'icon': Icons.apple, 'color': Colors.black, 'field': 'applePayEmail', 'linkPrefix': 'https://pay.apple.com/'},
-    {'name': 'Cash App', 'icon': Icons.money, 'color': Colors.green, 'field': 'cashAppUsername', 'linkPrefix': 'https://cash.app/'},
+    {
+      'name': 'Venmo',
+      'icon': Icons.payment,
+      'color': Colors.blue,
+      'field': 'venmoUsername',
+      'linkPrefix': 'https://venmo.com/'
+    },
+    {
+      'name': 'Zelle',
+      'icon': Icons.send,
+      'color': Colors.purple,
+      'field': 'zelleEmail',
+      'linkPrefix': 'https://zellepay.com/'
+    },
+    {
+      'name': 'Apple Pay',
+      'icon': Icons.apple,
+      'color': Colors.black,
+      'field': 'applePayEmail',
+      'linkPrefix': 'https://pay.apple.com/'
+    },
+    {
+      'name': 'Cash App',
+      'icon': Icons.money,
+      'color': Colors.green,
+      'field': 'cashAppUsername',
+      'linkPrefix': 'https://cash.app/'
+    },
   ];
 
   @override
@@ -37,7 +62,10 @@ class _TipScreenState extends State<TipScreen> {
 
   Future<void> _loadHeroPaymentMethods() async {
     try {
-      DocumentSnapshot doc = await FirebaseFirestore.instance.collection('heroes').doc(widget.heroId).get();
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('heroes')
+          .doc(widget.heroId)
+          .get();
       if (doc.exists) {
         var data = doc.data() as Map<String, dynamic>;
         setState(() {
@@ -47,10 +75,15 @@ class _TipScreenState extends State<TipScreen> {
           _zelleEmail = data['zelleEmail'] ?? '';
 
           // Tự động chọn phương thức đầu tiên có data
-          _selectedMethod = _venmoUsername.isNotEmpty ? 'venmoUsername' :
-                            _cashAppUsername.isNotEmpty ? 'cashAppUsername' :
-                            _applePayEmail.isNotEmpty ? 'applePayEmail' :
-                            _zelleEmail.isNotEmpty ? 'zelleEmail' : null;
+          _selectedMethod = _venmoUsername.isNotEmpty
+              ? 'venmoUsername'
+              : _cashAppUsername.isNotEmpty
+                  ? 'cashAppUsername'
+                  : _applePayEmail.isNotEmpty
+                      ? 'applePayEmail'
+                      : _zelleEmail.isNotEmpty
+                          ? 'zelleEmail'
+                          : null;
         });
       }
     } catch (e) {
@@ -61,7 +94,8 @@ class _TipScreenState extends State<TipScreen> {
   Future<void> _sendTip() async {
     if (_selectedMethod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hero has not registered any payment method')),
+        const SnackBar(
+            content: Text('Hero has not registered any payment method')),
       );
       return;
     }
@@ -77,15 +111,20 @@ class _TipScreenState extends State<TipScreen> {
     }
 
     // Lấy identifier từ biến state
-    String identifier = _selectedMethod == 'venmoUsername' ? _venmoUsername :
-                        _selectedMethod == 'cashAppUsername' ? _cashAppUsername :
-                        _selectedMethod == 'applePayEmail' ? _applePayEmail :
-                        _zelleEmail;
+    String identifier = _selectedMethod == 'venmoUsername'
+        ? _venmoUsername
+        : _selectedMethod == 'cashAppUsername'
+            ? _cashAppUsername
+            : _selectedMethod == 'applePayEmail'
+                ? _applePayEmail
+                : _zelleEmail;
 
     // Tìm linkPrefix từ paymentOptions
-    String linkPrefix = _paymentOptions.firstWhere((opt) => opt['field'] == _selectedMethod)['linkPrefix'];
+    String linkPrefix = _paymentOptions
+        .firstWhere((opt) => opt['field'] == _selectedMethod)['linkPrefix'];
 
-    String tipLink = '$linkPrefix$identifier?txn=pay&amount=$amount&note=${Uri.encodeComponent(note)}';
+    String tipLink =
+        '$linkPrefix$identifier?txn=pay&amount=$amount&note=${Uri.encodeComponent(note)}';
 
     if (await canLaunchUrl(Uri.parse(tipLink))) {
       await launchUrl(Uri.parse(tipLink), mode: LaunchMode.externalApplication);
@@ -123,7 +162,10 @@ class _TipScreenState extends State<TipScreen> {
             const SizedBox(height: 20),
             const Text(
               'Thank you for the help!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
             const SizedBox(height: 10),
             const Text(
@@ -142,7 +184,8 @@ class _TipScreenState extends State<TipScreen> {
                 bool isSelected = _selectedMethod == option['field'];
                 return FilterChip(
                   label: Text(option['name']),
-                  avatar: Icon(option['icon'], color: isSelected ? Colors.white : option['color']),
+                  avatar: Icon(option['icon'],
+                      color: isSelected ? Colors.white : option['color']),
                   selected: isSelected,
                   backgroundColor: Colors.grey[800],
                   selectedColor: option['color'],
@@ -189,10 +232,12 @@ class _TipScreenState extends State<TipScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
               ),
               onPressed: _sendTip,
-              child: const Text('Tip Now', style: TextStyle(color: Colors.white, fontSize: 18)),
+              child: const Text('Tip Now',
+                  style: TextStyle(color: Colors.white, fontSize: 18)),
             ),
             const SizedBox(height: 20),
             const Text(

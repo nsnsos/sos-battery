@@ -64,37 +64,61 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   // Google Sign-In
   Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
-      final GoogleSignIn googleSignIn = GoogleSignIn();
+      print('=== BẮT ĐẦU GOOGLE SIGN-IN ===');
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'], // Thêm scopes để lấy đầy đủ info
+      );
+
+      print('Mở popup Google...');
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
+        print('User cancel Google Sign-In');
         setState(() => _isLoading = false);
         return;
       }
 
-      // THÊM await Ở ĐÂY: googleUser.authentication trả về Future
+      print('User chọn: ${googleUser.email}');
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
+      print('Tạo credential...');
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      print('Sign in Firebase...');
+      final userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
 
+      print('LOGIN THÀNH CÔNG! UID: ${userCredential.user?.uid}');
+
+      // Show disclaimer (di chuyển vào sau success, giống email/pass)
+      await _showLegalDisclaimer();
+
+      // Navigate to home
       if (mounted) {
-        await _showLegalDisclaimer(); // Di chuyển disclaimer vào sau khi login thành công
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const HomePage()),
         );
       }
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
+      print('FirebaseAuthException: code = ${e.code}, message = ${e.message}');
       setState(() {
-        _errorMessage = 'Google Sign-In failed: $e';
+        _errorMessage = e.message ?? 'Google Sign-In failed';
+        _isLoading = false;
+      });
+    } on Exception catch (e) {
+      print('Google Sign-In error: $e');
+      setState(() {
+        _errorMessage = 'Lỗi kết nối Google: $e';
         _isLoading = false;
       });
     }

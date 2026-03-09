@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:latlong2/latlong.dart' as latlng; // <--- THÊM DÒNG NÀY
 
 import 'features/auth/presentation/pages/login_page.dart';
-import 'features/sos/presentation/pages/home_page.dart'; // Không dùng trực tiếp nhưng giữ lại nếu cần
+// Không dùng trực tiếp nhưng giữ lại nếu cần
 import 'features/sos/presentation/pages/hero_screen_accepted.dart';
 import 'features/sos/presentation/pages/sos_request_sent_screen.dart'; // <--- THÊM DÒNG NÀY (quan trọng!)
 import 'firebase_options.dart';

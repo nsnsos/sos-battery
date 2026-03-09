@@ -213,17 +213,20 @@ class _HeroProfileScreenState extends State<HeroProfileScreen> {
                               labelText: label,
                               border: const OutlineInputBorder()),
                           onChanged: (value) {
-                            if (field == 'venmoUsername')
+                            if (field == 'venmoUsername') {
                               _venmoUsername = value;
-                            if (field == 'cashAppUsername')
+                            }
+                            if (field == 'cashAppUsername') {
                               _cashAppUsername = value;
-                            if (field == 'applePayEmail')
+                            }
+                            if (field == 'applePayEmail') {
                               _applePayEmail = value;
+                            }
                             if (field == 'zelleEmail') _zelleEmail = value;
                           },
                         ),
                       );
-                    }).toList(),
+                    }),
 
                     const SizedBox(height: 40),
 

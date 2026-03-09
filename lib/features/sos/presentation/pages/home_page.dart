@@ -156,7 +156,7 @@ class _HomePageState extends ConsumerState<HomePage>
               ),
               const SizedBox(height: 10),
               const Text('Rescue team will be notified.',
-                  style: const TextStyle(color: Colors.white)),
+                  style: TextStyle(color: Colors.white)),
             ],
           ),
           actions: [
@@ -294,8 +294,8 @@ class _HomePageState extends ConsumerState<HomePage>
                   MaterialPageRoute(builder: (_) => const DonateScreen()),
                 );
               },
-              child: const Icon(Icons.favorite, color: Colors.white, size: 24),
               tooltip: 'Donate to support the app',
+              child: const Icon(Icons.favorite, color: Colors.white, size: 24),
             ),
           ),
 
@@ -386,7 +386,7 @@ class _HomePageState extends ConsumerState<HomePage>
               child: Card(
                 color: Colors.black87,
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(12),
                   child: Text(
                     'Getting your location...',
                     textAlign: TextAlign.center,
