@@ -1,0 +1,11 @@
+plugins {
+    id 'com.android.application' version '8.2.0' apply false
+}
+
+// Đây là phần cấu trúc của một dự án Android chuẩn
+subprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
