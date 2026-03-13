@@ -2,125 +2,90 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-
-    <key>CFBundleDevelopmentRegion</key>
-    <string>$(DEVELOPMENT_LANGUAGE)</string>
-
-    <key>CFBundleDisplayName</key>
-    <string>SOS Battery</string>
-
-    <key>CFBundleExecutable</key>
-    <string>$(EXECUTABLE_NAME)</string>
-
-    <key>CFBundleIdentifier</key>
-    <string>com.sosbattery.app</string>
-
-    <key>CFBundleInfoDictionaryVersion</key>
-    <string>6.0</string>
-
-    <key>CFBundleName</key>
-    <string>SOS Battery</string>
-
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-
-    <key>CFBundleShortVersionString</key>
-    <string>1.0.26</string>
-
-    <key>CFBundleVersion</key>
-    <string>26</string>
-
-    <key>LSRequiresIPhoneOS</key>
-    <true/>
-
-    <key>UILaunchStoryboardName</key>
-    <string>LaunchScreen</string>
-
-    <key>UIMainStoryboardFile</key>
-    <string>Main</string>
-
-    <key>UISupportedInterfaceOrientations</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
-
-    <key>UISupportedInterfaceOrientations~ipad</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationPortraitUpsideDown</string>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
-
-    <!-- App Transport Security -->
-    <key>NSAppTransportSecurity</key>
-    <dict>
-        <key>NSAllowsArbitraryLoads</key>
-        <true/>
-    </dict>
-
-    <!-- Permissions -->
-    <key>NSCameraUsageDescription</key>
-    <string>Ứng dụng cần camera để hỗ trợ gửi thông tin SOS (ảnh, video).</string>
-
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>Ứng dụng cần truy cập thư viện ảnh để chọn và gửi hình ảnh/video SOS.</string>
-
-    <key>NSLocationWhenInUseUsageDescription</key>
-    <string>SOS Battery cần vị trí của bạn để gửi yêu cầu cứu hộ khi bạn đang sử dụng ứng dụng.</string>
-
-    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-    <string>SOS Battery cần truy cập vị trí liên tục (kể cả khi ứng dụng ở nền) để theo dõi và gửi yêu cầu cứu hộ khẩn cấp kịp thời.</string>
-
-    <!-- Background Modes - rất quan trọng cho SOS -->
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>location</string>           <!-- Bắt buộc cho background location tracking -->
-        <string>remote-notification</string> <!-- Để nhận push từ server nếu cần -->
-        <string>fetch</string>              <!-- Nếu có background fetch định kỳ -->
-        <string>processing</string>         <!-- Nếu dùng BGProcessingTask cho công việc nặng -->
-    </array>
-
-    <!-- Background Tasks identifiers -->
-    <key>BGTaskSchedulerPermittedIdentifiers</key>
-    <array>
-        <string>com.sosbattery.app.locationUpdate</string>
-        <string>com.sosbattery.app.backgroundSync</string>
-    </array>
-
-    <!-- Google Sign-In URL scheme (chỉ dùng một giá trị REVERSED_CLIENT_ID đúng) -->
-<key>CFBundleURLTypes</key>
-<array>
-    <dict>
-        <key>CFBundleTypeRole</key>
-        <string>Editor</string>
-        <key>CFBundleURLSchemes</key>
-        <array>
-            <!-- DÙNG GIÁ TRỊ CHÍNH XÁC TỪ GoogleService-Info.plist (REVERSED_CLIENT_ID) -->
-            <string>com.googleusercontent.apps.183082399206-t5v5sfb87aoh7peab4s0flhjnms6cchb</string>
-            <!-- Nếu bro có giá trị khác từ Firebase, thay bằng cái đúng, KHÔNG add cả hai -->
-        </array>
-    </dict>
-    <!-- Nếu có URL scheme khác (ví dụ deep link, universal link), add dict mới ở đây -->
-</array>
-
-<!-- Các key khác giữ nguyên -->
-<key>ITSAppUsesNonExemptEncryption</key>
-<false/>
-
-<key>UIApplicationSupportsIndirectInputEvents</key>
-<true/>
-
-<key>io.flutter.embedding.android.EnableImpeller</key>
-<false/>
-
-<key>FLTEnableImpeller</key>
-<false/>
-
-<key>io.flutter.embedding.ios.EnableImpeller</key>
-<false/>
-
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>SOS Battery</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.sosbattery.app</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>SOS Battery</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.27</string>
+	<key>CFBundleVersion</key>
+	<string>27</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Ứng dụng cần camera để hỗ trợ gửi thông tin SOS (ảnh, video).</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ứng dụng cần truy cập thư viện ảnh để chọn và gửi hình ảnh/video SOS.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SOS Battery cần vị trí của bạn để gửi yêu cầu cứu hộ khi bạn đang sử dụng ứng dụng.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>SOS Battery cần truy cập vị trí liên tục (kể cả khi ứng dụng ở nền) để theo dõi và gửi yêu cầu cứu hộ khẩn cấp kịp thời.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>remote-notification</string>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.sosbattery.app.locationUpdate</string>
+		<string>com.sosbattery.app.backgroundSync</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.183082399206-t5v5sfb87aoh7peab4s0flhjnms6cchb</string>
+			</array>
+		</dict>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>io.flutter.embedding.android.EnableImpeller</key>
+	<false/>
+	<key>FLTEnableImpeller</key>
+	<false/>
+	<key>io.flutter.embedding.ios.EnableImpeller</key>
+	<false/>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 </dict>
 </plist>
